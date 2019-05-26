@@ -1,0 +1,9 @@
+{
+  "name": "com.lunoart.epyllion",
+  "displayName": "Epyllion",
+  "version": "0.0.1",
+  "unity": "2019.1",
+  "description": "A story and quest manager",
+  "keywords": ["Story","Quest","RPG"],
+  "category": "Gameplay"
+}
