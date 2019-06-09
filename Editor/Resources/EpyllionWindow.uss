@@ -1,0 +1,32 @@
+#contentViewContainer {
+    flex: 1;
+}
+
+.graphView {
+    flex: 1
+}
+
+.graphElement.rootQuest {
+    flex: 1;
+    position: relative !important;
+}
+
+.rootQuest #node-border {
+    flex:1;
+}
+
+.graphView .questGroupContainer {
+    flex:1;
+    overflow: hidden;
+    margin: 0;
+    border: 0;
+    min-width: 100px;
+    min-height: 50px;
+}
+
+
+.newButton {
+    position: absolute;
+    z-index: 1000;
+    top: 20px;
+}

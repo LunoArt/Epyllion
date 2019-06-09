@@ -1,0 +1,15 @@
+{
+    "name": "Luno.Epyllion.Editor",
+    "references": [
+        "GUID:90dba49b9713d4a8ab7c35eef0081caa"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
