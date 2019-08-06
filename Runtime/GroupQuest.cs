@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Luno.Epyllion
 {
-    [CreateAssetMenu(menuName = "Epyllion Quest", fileName = "New Quest")]
+    [Serializable]
     public class GroupQuest : Quest
     {
         internal Quest[] children;

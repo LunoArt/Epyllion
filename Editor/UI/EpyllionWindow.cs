@@ -43,8 +43,16 @@ namespace Luno.Epyllion.Editor.UI
 
         private void OnSelectionChange()
         {
-            GroupQuest questGroup = Selection.activeObject as GroupQuest;
-            _graph.quest = questGroup;
+            GameObject storyObject = Selection.activeObject as GameObject;
+            if (storyObject == null)
+                return;
+            Story story = storyObject.GetComponent<Story>();
+            if (story == null)
+            {
+                _graph.quest = null;
+                return;
+            }
+            _graph.quest = story.quest;
         }
     }
 }

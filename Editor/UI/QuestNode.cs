@@ -73,7 +73,7 @@ namespace Luno.Epyllion.Editor.UI
         private void AddGroupQuest()
         {
             var graph = this.graph;
-            var node = new QuestNode(ScriptableObject.CreateInstance<GroupQuest>());
+            var node = new QuestNode(new GroupQuest());
             graph.AddElement(node);
             innerGraph.Q("contentViewContainer").Add(node);
             //innerGraph.AddElement(node);
