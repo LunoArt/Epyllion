@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Luno.Epyllion
 {
     [Serializable]
-    public class Quest
+    public class Quest : ScriptableObject
     {
         [SerializeField] private GroupQuest _parent;
         [SerializeField] private Quest[] _requireds;

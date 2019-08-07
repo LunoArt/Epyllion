@@ -1,11 +1,27 @@
+
 #contentViewContainer {
     flex: 1;
 }
 
 .graphView {
-    flex: 1
+    flex: 1;
+    background-color: #666666;
 }
 
+.graphView #emptyScreen {
+    flex: 1;
+    display: none;
+}
+
+.graphView.empty #contentViewContainer {
+    display: none;
+}
+
+.graphView.empty #emptyScreen {
+    display: flex;
+}
+
+/*
 .graphElement.rootQuest {
     flex: 1;
     position: relative !important;
@@ -29,4 +45,4 @@
     position: absolute;
     z-index: 1000;
     top: 20px;
-}
+}*/

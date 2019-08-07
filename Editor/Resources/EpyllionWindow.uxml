@@ -13,5 +13,10 @@ xsi:schemaLocation="
                         UnityEditor.PackageManager.UI ../../../../../UIElementsSchema/UnityEditor.PackageManager.UI.xsd
 "
 >
-    <epyllion:Graph name="graph"/>
+    <epyllion:Graph name="graph" class="empty">
+        <engine:VisualElement name="emptyScreen">
+            <engine:Label text="Select a Group Quest"></engine:Label>
+            <engine:Button name="createButton" text="Create Story Structure"></engine:Button>
+        </engine:VisualElement>
+    </epyllion:Graph>
 </engine:UXML>

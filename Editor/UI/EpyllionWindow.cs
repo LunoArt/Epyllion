@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using Button = UnityEngine.UI.Button;
 
 namespace Luno.Epyllion.Editor.UI
 {
@@ -38,21 +39,30 @@ namespace Luno.Epyllion.Editor.UI
                 throw new Exception	("Couldn't find the Graph element");
             }
             
+            root.Q<UnityEngine.UIElements.Button>("createButton").RegisterCallback<MouseUpEvent>(evt => CreateStoryStructure());
+            
             OnSelectionChange();
         }
 
         private void OnSelectionChange()
         {
-            GameObject storyObject = Selection.activeObject as GameObject;
-            if (storyObject == null)
-                return;
-            Story story = storyObject.GetComponent<Story>();
+            StoryStructure story = Selection.activeObject as StoryStructure;
             if (story == null)
             {
-                _graph.quest = null;
+                _graph.story = null;
                 return;
             }
-            _graph.quest = story.quest;
+
+            _graph.story = story;
+        }
+
+        private void CreateStoryStructure()
+        {
+            string path = EditorUtility.SaveFilePanelInProject("Create New Story", "New Epyllion Story", "asset",
+                "Set a location to save the asset");
+            StoryStructure story = ScriptableObject.CreateInstance<StoryStructure>();
+            AssetDatabase.CreateAsset(story,path);
+            UnityEditor.Selection.activeObject = story;
         }
     }
 }

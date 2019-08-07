@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace Luno.Epyllion
 {
-    [Serializable]
     public class GroupQuest : Quest
     {
         internal Quest[] children;
-
+        
         protected internal override void Pause()
         {
             base.Pause();

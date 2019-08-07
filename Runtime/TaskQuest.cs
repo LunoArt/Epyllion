@@ -1,4 +1,6 @@
-﻿namespace Luno.Epyllion
+﻿using System;
+
+namespace Luno.Epyllion
 {
     public class TaskQuest : Quest
     {
