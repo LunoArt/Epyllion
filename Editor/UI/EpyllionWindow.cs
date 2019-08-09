@@ -46,14 +46,32 @@ namespace Luno.Epyllion.Editor.UI
 
         private void OnSelectionChange()
         {
-            StoryStructure story = Selection.activeObject as StoryStructure;
-            if (story == null)
+            GameObject managerObject = Selection.activeGameObject;
+            StoryStructure story;
+            StorySceneManager manager;
+            if (managerObject != null)
             {
-                _graph.story = null;
-                return;
+                manager = managerObject.GetComponent<StorySceneManager>();
+                if (manager != null)
+                {
+                    story = manager.storyStructure;
+                    if (story != null)
+                    {
+                        _graph.SetTargets(story,manager);
+                        return;
+                    }
+                }
             }
-
-            _graph.story = story;
+            else
+            {
+                story = Selection.activeObject as StoryStructure;
+                if (story != null)
+                {
+                    _graph.SetTargets(story, null);
+                    return;
+                }
+            }
+            _graph.SetTargets(null,null);
         }
 
         private void CreateStoryStructure()

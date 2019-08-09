@@ -1,15 +1,19 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace Luno.Epyllion
 {
     [Serializable]
-    public class StoryStructure : ScriptableObject
+    public class StoryStructure : ScriptableObject, ISerializationCallbackReceiver
     {
         private int lastId;
-        public QuestNodeData[] quests;
+        public QuestNodeData[] quests = new QuestNodeData[0];
 
         public QuestNodeData CreateNode<T>() where T : Quest
         {
@@ -22,16 +26,29 @@ namespace Luno.Epyllion
         {
             ArrayUtility.Remove(ref quests, node);
         }
+        
+        public void OnBeforeSerialize()
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void OnAfterDeserialize()
+        {
+            foreach (var quest in quests)
+            {
+                lastId = Mathf.Max(lastId, quest.id);
+            }
+        }
     }
 
     [Serializable]
     public class QuestNodeData
     {
         public int id;
+        public string title;
         public int parent = 0;
         public int[] requirements = new int[0];
         public string position = "";
-        public Object gameObj;
 
         public Rect GetPosition()
         {

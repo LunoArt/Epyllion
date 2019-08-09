@@ -21,28 +21,11 @@
     display: flex;
 }
 
-/*
-.graphElement.rootQuest {
+.node #title .titleField, .node #title.editing #title-label, .node #title.editing #title-button-container  {
+    display: none;
+}
+
+.node #title.editing .titleField {
+    display: flex;
     flex: 1;
-    position: relative !important;
 }
-
-.rootQuest #node-border {
-    flex:1;
-}
-
-.graphView .questGroupContainer {
-    flex:1;
-    overflow: hidden;
-    margin: 0;
-    border: 0;
-    min-width: 100px;
-    min-height: 50px;
-}
-
-
-.newButton {
-    position: absolute;
-    z-index: 1000;
-    top: 20px;
-}*/
