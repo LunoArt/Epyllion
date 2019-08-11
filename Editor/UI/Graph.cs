@@ -27,13 +27,6 @@ namespace Luno.Epyllion.Editor.UI
             graphViewChanged = OnChange;
         }
 
-        private class BindElement
-        {
-            public QuestNode node;
-            public int binderIndex;
-            public SerializedProperty binderField;
-        }
-
         private void RebuildGraph()
         {
             RemoveAllElements();
@@ -47,64 +40,37 @@ namespace Luno.Epyllion.Editor.UI
             
             if (story.quests != null)
             {
-                Dictionary<int, BindElement> nodesDictionary = new Dictionary<int, BindElement>();
+                Dictionary<int, QuestNode> nodesDictionary = new Dictionary<int, QuestNode>();
 
-                SerializedObject sceneManagerSerialized = null;
-                //load the binders
-                if (sceneManager != null)
-                {
-                    sceneManagerSerialized = new SerializedObject(sceneManager);
-                    for (var i = 0; i < sceneManager.binders.Length; i++)
-                    {
-                        nodesDictionary.Add(sceneManager.binders[i].id, new BindElement()
-                        {
-                            binderIndex = i,
-                            binderField = sceneManagerSerialized.FindProperty("binders.Array.data["+i+"]")
-                        });
-                    }
-                }
-
-
+                //load quest nodes
                 for (var q = 0; q < story.quests.Length; q++)
                 {
                     var quest = story.quests[q];
-                    QuestNode node = new QuestNode(quest);
+                    QuestNode node = new QuestNode(this, quest, -1);
                     
-                    //bind to the scene manager
-                    if (!nodesDictionary.TryGetValue(quest.id, out var bindElement))
-                    {
-                        bindElement = new BindElement();
-                        if (sceneManagerSerialized != null)
-                        {
-                            int i = sceneManagerSerialized.FindProperty("binders").arraySize++;
-                            sceneManagerSerialized.FindProperty("binders.Array.data[" + i + "].id").intValue = quest.id;
-                            sceneManagerSerialized.ApplyModifiedPropertiesWithoutUndo();
-                            bindElement.binderIndex = i;
-                            bindElement.binderField =
-                                sceneManagerSerialized.FindProperty("binders.Array.data[" + i + "]");
-                        }
-                        nodesDictionary.Add(quest.id,bindElement);
-                    }
-                    bindElement.node = node;
-
-                    if (sceneManagerSerialized != null)
-                    {
-                        PropertyField field = new PropertyField(bindElement.binderField);
-                        field.Bind(bindElement.binderField.serializedObject);
-                        node.SetContent(field);
-                    }
+                    nodesDictionary.Add(quest.id,node);
                     
                     AddElement(node);
                 }
 
+                //load connections
                 foreach (var quest in story.quests)
                 {
                     if (quest.requirements != null)
                     {
                         foreach (var requirement in quest.requirements)
                         {
-                            AddElement(nodesDictionary[requirement].node.output.ConnectTo(nodesDictionary[quest.id].node.input));
+                            AddElement(nodesDictionary[requirement].output.ConnectTo(nodesDictionary[quest.id].input));
                         }
+                    }
+                }
+                
+                //load the binders
+                if (sceneManager != null)
+                {
+                    for (var i = 0; i < sceneManager.binders.Length; i++)
+                    {
+                        nodesDictionary[sceneManager.binders[i].id].binderIndex = i;
                     }
                 }
             }
@@ -173,10 +139,10 @@ namespace Luno.Epyllion.Editor.UI
         {
             var quest = story.CreateNode<TaskQuest>();
             quest.title = "New Quest";
-            var node = new QuestNode(quest);
+            var node = new QuestNode(this, quest, -1);
             AddElement(node);
             
-            var sceneManagerSerialized = new SerializedObject(sceneManager);
+            /*var sceneManagerSerialized = new SerializedObject(sceneManager);
             int i = sceneManagerSerialized.FindProperty("binders").arraySize++;
             sceneManagerSerialized.FindProperty("binders.Array.data[" + i + "].id").intValue = quest.id;
             sceneManagerSerialized.ApplyModifiedPropertiesWithoutUndo();
@@ -184,7 +150,8 @@ namespace Luno.Epyllion.Editor.UI
             
             PropertyField field = new PropertyField(serializedField);
             field.Bind(serializedField.serializedObject);
-            node.SetContent(field);
+            node.SetContent(field);*/
+            
             node.StartEditingTitle();
         }
 
