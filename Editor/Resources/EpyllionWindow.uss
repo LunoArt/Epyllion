@@ -1,0 +1,31 @@
+
+#contentViewContainer {
+    flex: 1;
+}
+
+.graphView {
+    flex: 1;
+    background-color: #666666;
+}
+
+.graphView #emptyScreen {
+    flex: 1;
+    display: none;
+}
+
+.graphView.empty #contentViewContainer {
+    display: none;
+}
+
+.graphView.empty #emptyScreen {
+    display: flex;
+}
+
+.node #title .titleField, .node #title.editing #title-label, .node #title.editing #title-button-container  {
+    display: none;
+}
+
+.node #title.editing .titleField {
+    display: flex;
+    flex: 1;
+}
