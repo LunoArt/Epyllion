@@ -24,7 +24,7 @@ namespace Luno.Epyllion.Editor.UI
             internal set
             {
                 _binderIndex = value;
-                _actionsContainer.Clear();
+                _actionsContainer?.Clear();
                 if(_binderIndex < 0) return;
                 
                 var sceneManagerSerialized = new SerializedObject(_graph.sceneManager);
@@ -69,12 +69,15 @@ namespace Luno.Epyllion.Editor.UI
             input.name = "input";
             
             //Actions section
-            _actionsContainer = new VisualElement();
-            var addActionButton = new Button(ShowAddActionPopup);
-            addActionButton.text = "Add Action";
-            extensionContainer.Add(_actionsContainer);
-            extensionContainer.Add(addActionButton);
-            
+            if (graph.sceneManager != null)
+            {
+                _actionsContainer = new VisualElement();
+                var addActionButton = new Button(ShowAddActionPopup);
+                addActionButton.text = "Add Action";
+                extensionContainer.Add(_actionsContainer);
+                extensionContainer.Add(addActionButton);
+            }
+
             this.binderIndex = binderIndex;
             
             //Actions Drag

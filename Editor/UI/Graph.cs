@@ -13,7 +13,7 @@ namespace Luno.Epyllion.Editor.UI
     {
         public class GraphFactory : UnityEngine.UIElements.UxmlFactory<Graph> {}
 
-        public StoryStructure story { get; private set; }
+        public Story story { get; private set; }
         public StorySceneManager sceneManager { get; private set; }
 
         public Graph()
@@ -38,14 +38,14 @@ namespace Luno.Epyllion.Editor.UI
             }
             RemoveFromClassList("empty");
             
-            if (story.quests != null)
+            if (story.nodesData != null)
             {
                 Dictionary<int, QuestNode> nodesDictionary = new Dictionary<int, QuestNode>();
 
                 //load quest nodes
-                for (var q = 0; q < story.quests.Length; q++)
+                for (var q = 0; q < story.nodesData.Length; q++)
                 {
-                    var quest = story.quests[q];
+                    var quest = story.nodesData[q];
                     QuestNode node = new QuestNode(this, quest, -1);
                     
                     nodesDictionary.Add(quest.id,node);
@@ -54,7 +54,7 @@ namespace Luno.Epyllion.Editor.UI
                 }
 
                 //load connections
-                foreach (var quest in story.quests)
+                foreach (var quest in story.nodesData)
                 {
                     if (quest.requirements != null)
                     {
@@ -128,7 +128,7 @@ namespace Luno.Epyllion.Editor.UI
         }
 
 
-        public void SetTargets(StoryStructure structure, StorySceneManager manager)
+        public void SetTargets(Story structure, StorySceneManager manager)
         {
             story = structure;
             sceneManager = manager;
@@ -151,6 +151,8 @@ namespace Luno.Epyllion.Editor.UI
             PropertyField field = new PropertyField(serializedField);
             field.Bind(serializedField.serializedObject);
             node.SetContent(field);*/
+            
+            EditorUtility.SetDirty(story);
             
             node.StartEditingTitle();
         }

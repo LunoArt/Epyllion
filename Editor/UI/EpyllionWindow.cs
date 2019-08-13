@@ -47,14 +47,14 @@ namespace Luno.Epyllion.Editor.UI
         private void OnSelectionChange()
         {
             GameObject managerObject = Selection.activeGameObject;
-            StoryStructure story;
+            Story story;
             StorySceneManager manager;
             if (managerObject != null)
             {
                 manager = managerObject.GetComponent<StorySceneManager>();
                 if (manager != null)
                 {
-                    story = manager.storyStructure;
+                    story = manager.story;
                     if (story != null)
                     {
                         _graph.SetTargets(story,manager);
@@ -64,7 +64,7 @@ namespace Luno.Epyllion.Editor.UI
             }
             else
             {
-                story = Selection.activeObject as StoryStructure;
+                story = Selection.activeObject as Story;
                 if (story != null)
                 {
                     _graph.SetTargets(story, null);
@@ -78,7 +78,7 @@ namespace Luno.Epyllion.Editor.UI
         {
             string path = EditorUtility.SaveFilePanelInProject("Create New Story", "New Epyllion Story", "asset",
                 "Set a location to save the asset");
-            StoryStructure story = ScriptableObject.CreateInstance<StoryStructure>();
+            Story story = ScriptableObject.CreateInstance<Story>();
             AssetDatabase.CreateAsset(story,path);
             UnityEditor.Selection.activeObject = story;
         }

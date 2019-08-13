@@ -7,7 +7,7 @@ namespace Luno.Epyllion
 {
     public class GroupQuest : Quest
     {
-        internal Quest[] children;
+        internal Quest[] children = new Quest[0];
         
         protected internal override void Pause()
         {
