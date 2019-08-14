@@ -9,13 +9,7 @@ namespace Luno.Epyllion.Samples
         void Start()
         {
             manager = GetComponent<StorySceneManager>();
-            //manager.story.SetState(manager.story.GetInitialState());
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-        
+            manager.story.SetState(manager.story.CalculateInitialState());
         }
     }
 }

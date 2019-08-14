@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
@@ -14,17 +16,20 @@ namespace Luno.Epyllion
     {
         private int _lastId;
         private List<StorySceneManager> _managers = new List<StorySceneManager>();
-        private Dictionary<int, Quest> _quests;
+        internal Dictionary<int, Quest> _quests = new Dictionary<int, Quest>();
 
         [SerializeField]
         internal QuestNodeData[] nodesData = new QuestNodeData[0];
         
         
 
+        #region initialization
         //initialize the story in runtime
         private void OnEnable()
         {
-            _quests = new Dictionary<int, Quest>();
+            #if UNITY_EDITOR
+            if (!EditorApplication.isPlayingOrWillChangePlaymode) return;
+            #endif
             
             //root quest
             _quests.Add(0, new GroupQuest());
@@ -33,6 +38,7 @@ namespace Luno.Epyllion
             foreach (var node in nodesData)
             {
                 var quest = new TaskQuest();
+                quest._id = node.id;
                 quest.exclusive = node.exclusive;
                 _quests.Add(node.id, quest);
             }
@@ -51,7 +57,7 @@ namespace Luno.Epyllion
                 ArrayUtility.Add(ref quest._parent.children, quest);
                 if (quest._parent.exclusive)
                 {
-                    SetClosestExclusiveParent(quest._parent.children,quest._parent);
+                    SetClosestExclusiveParent(new []{quest},quest._parent);
                 }
                 else if(quest._parent._closestExclusiveParent != null)
                 {
@@ -76,7 +82,43 @@ namespace Luno.Epyllion
                 if (!quest.exclusive && quest is GroupQuest groupQuest) SetClosestExclusiveParent(groupQuest.children, exclusiveParent);
             }            
         }
+        #endregion
 
+        private void OnDisable()
+        {
+            _managers.Clear();
+            _quests.Clear();
+        }
+
+        public StoryState CalculateInitialState()
+        {
+            var ids = new int[_quests.Count];
+            var states = new QuestState[_quests.Count];
+            var count = -1;
+            ComputeInitialState(_quests[0],true, ref ids, ref states, ref count);
+
+            states[0] = QuestState.Available;
+            
+            var state = new StoryState(){Ids = ids, States = states};
+            return state;
+        }
+
+        private void ComputeInitialState(Quest quest, bool open , ref int[] ids, ref QuestState[] states, ref int count)
+        {
+            count++;
+            open &= quest._requirements.Length == 0;
+            ids[count] = quest._id;
+            states[count] = open ? QuestState.Available : QuestState.Blocked;
+
+            if(quest is GroupQuest groupQuest)
+            {
+                foreach (var child in groupQuest.children)
+                {
+                    ComputeInitialState(child, open, ref ids, ref states, ref count);
+                }
+            }
+        }
+        
         public QuestNodeData CreateNode<T>() where T : Quest
         {
             QuestNodeData node = new QuestNodeData() {id = ++_lastId};
@@ -109,52 +151,43 @@ namespace Luno.Epyllion
             _managers.Remove(manager);
         }
 
-        public void SetState(StoryState getInitialState)
+        public void SetState(StoryState state)
         {
-            throw new NotImplementedException();
-        }
-
-        public StoryState GetInitialState()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    [Serializable]
-    public class QuestNodeData
-    {
-        public int id;
-        public string title;
-        public int parent = 0;
-        public int[] requirements = new int[0];
-        public string position = "";
-        public bool exclusive = false;
-
-        public Rect GetPosition()
-        {
-            string[] coords = position.Split(',');
-            if (coords.Length != 2)
+            var indexes = new Dictionary<int,int>();
+            
+            for (var i = 0; i < state.Ids.Length; i++)
             {
-                return Rect.zero;
+                var id = state.Ids[i];
+                indexes.Add(id, i);
             }
-            return new Rect(new Vector2(int.Parse(coords[0]),int.Parse(coords[1])), Vector2.zero);
-        }
 
-        public void SetPosition(Rect position)
-        {
-            this.position = (int)position.x+","+(int)position.y;
-        }
+            for (var i = 0; i < state.Ids.Length; i++)
+            {
+                var id = state.Ids[i];
+                _quests[id]._state = state.States[i];
+                
+                //requirements left
+                uint requirementsLeft = 0;
+                foreach (var requirement in _quests[id]._requirements)
+                {
+                    if (state.States[indexes[requirement._id]] != QuestState.Completed)
+                        requirementsLeft++;
+                }
+                _quests[id]._requiredLeft = requirementsLeft;
 
-        public void AddRequirement(int id)
-        {
-            if (ArrayUtility.IndexOf(requirements, id) != -1)
-                return;
-            ArrayUtility.Add(ref requirements, id);
-        }
+                //children left
+                if (_quests[id] is GroupQuest groupQuest)
+                {
+                    uint childrenLeft = 0;
+                    foreach (var child in groupQuest.children)
+                    {
+                        if (state.States[indexes[child._id]] != QuestState.Completed)
+                            childrenLeft++;
+                    }
 
-        public void RemoveRequirement(int id)
-        {
-            ArrayUtility.Remove(ref requirements, id);
+                    groupQuest._childrenLeft = childrenLeft;
+                }
+            }
         }
     }
 }

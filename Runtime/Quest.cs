@@ -7,13 +7,13 @@ namespace Luno.Epyllion
 {
     public abstract class Quest
     {
+        internal int _id;
         internal GroupQuest _parent;
         internal Quest[] _requirements = new Quest[0];
 
         internal GroupQuest _closestExclusiveParent;
         internal Quest[] _dependents = new Quest[0];
-        private uint _requiredLeft;
-        private uint _childrenLeft;
+        internal uint _requiredLeft;
 
         public delegate void StateChangeDelegate(Quest quest, QuestState prevState);
         public event StateChangeDelegate OnStateChanged;
@@ -25,11 +25,11 @@ namespace Luno.Epyllion
             set => _exclusive = value;
         }
 
-        private QuestState _state;
+        internal QuestState _state;
         public QuestState state
         {
             get => _state;
-            private set
+            protected set
             {
                 if(_stateModificationBlock)
                     throw new Exception("You can't change the state of a Quest in an OnStateChanged event");
@@ -52,7 +52,7 @@ namespace Luno.Epyllion
                 return true;
             }
             
-            throw new Exception(String.Format("The quest state can't be set to %s. Current state: %s",newState,_state));
+            throw new Exception($"The quest state can't be set to {newState}. Current state: {_state}");
         }
         
         protected internal virtual void Pause()
@@ -71,6 +71,26 @@ namespace Luno.Epyllion
                 state = QuestState.Active;
             else if (_state == QuestState.Excluded)
                 state = QuestState.Available;
+        }
+
+        protected internal virtual void Unblock()
+        {
+            switch (_parent._state)
+            {
+                case QuestState.Active:
+                case QuestState.Available:
+                    state = QuestState.Available;
+                    break;
+                case QuestState.Excluded:
+                case QuestState.Paused:
+                    state = QuestState.Excluded;
+                    break;
+                case QuestState.Blocked:
+                case QuestState.Completed:
+                    throw new Exception($"Can't unblock the quest as the parent is {_parent._state}");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
         
         public void Activate()
@@ -118,8 +138,12 @@ namespace Luno.Epyllion
 
         public void Complete()
         {
-            if (_state == QuestState.Completed)
+            if(!ValidateStateChange(QuestState.Completed,QuestState.Active, QuestState.Available))
                 return;
+            /*if (_state == QuestState.Completed)
+                return;*/
+
+            state = QuestState.Completed;
 
             //re-include the paused and excluded quests
             if (_exclusive && _closestExclusiveParent != null)
@@ -134,7 +158,7 @@ namespace Luno.Epyllion
             GroupQuest parent = _parent;
             while (parent != null)
             {
-                //if all children completed, mark is as completed
+                //if all children completed, mark it as completed
                 if (--parent._childrenLeft <= 0)
                     parent.state = QuestState.Completed;
                 else
@@ -149,9 +173,11 @@ namespace Luno.Epyllion
             {
                 if (--dependent._requiredLeft <= 0)
                 {
-                    if (dependent._parent._state != QuestState.Available ||
+                    /*if (dependent._parent._state != QuestState.Available ||
                         dependent._parent._state == QuestState.Excluded)
-                        dependent.state = dependent._parent._state;
+                        dependent.state = dependent._parent._state;*/
+                    if (dependent._parent._state != QuestState.Blocked)
+                        dependent.Unblock();
                 }
             }
         }

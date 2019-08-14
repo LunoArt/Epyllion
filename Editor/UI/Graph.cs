@@ -182,7 +182,7 @@ namespace Luno.Epyllion.Editor.UI
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
-            evt.menu.AppendAction("Create Node", CreateNode, (a) => DropdownMenuAction.Status.Normal);
+            evt.menu.AppendAction("Create Node", CreateNode, (a) => (EditorApplication.isPlayingOrWillChangePlaymode?DropdownMenuAction.Status.Disabled:DropdownMenuAction.Status.Normal));
             evt.menu.AppendSeparator();
             base.BuildContextualMenu(evt);
             //evt.menu.AppendSeparator();

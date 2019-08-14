@@ -71,6 +71,26 @@ namespace Luno.Epyllion.Editor.UI
             //Actions section
             if (graph.sceneManager != null)
             {
+                extensionContainer.Add(new IMGUIContainer(() =>
+                {
+                    if (!EditorApplication.isPlaying)
+                        return;
+                    
+                    GUILayout.Label(graph.sceneManager.story._quests[quest.id].state.ToString());
+                    GUILayout.Label("requirements left: "+graph.sceneManager.story._quests[quest.id]._requiredLeft);
+                    
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Activate"))
+                    {
+                        graph.sceneManager.story._quests[quest.id].Activate();
+                    }
+
+                    if (GUILayout.Button("Complete"))
+                    {
+                        graph.sceneManager.story._quests[quest.id].Complete();
+                    }
+                    GUILayout.EndHorizontal();
+                }));
                 _actionsContainer = new VisualElement();
                 var addActionButton = new Button(ShowAddActionPopup);
                 addActionButton.text = "Add Action";

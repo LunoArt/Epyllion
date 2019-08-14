@@ -5,7 +5,9 @@ namespace Luno.Epyllion
 {
     public class StorySceneManager: MonoBehaviour
     {
+        #pragma warning disable 649
         [SerializeField] private Story _story;
+        #pragma warning restore 649
         public Story story => _story;
         [SerializeField] internal NodeBinder[] binders = new NodeBinder[0];
 

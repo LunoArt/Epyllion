@@ -17,5 +17,29 @@ MonoBehaviour:
     title: New Quest
     parent: 0
     requirements: 
-    position: 345,169
+    position: 179,-23
+    exclusive: 0
+  - id: 7
+    title: New Quest
+    parent: 0
+    requirements: 06000000
+    position: 509,-132
+    exclusive: 0
+  - id: 9
+    title: New Quest
+    parent: 0
+    requirements: 06000000
+    position: 524,116
+    exclusive: 0
+  - id: 10
+    title: New Quest
+    parent: 0
+    requirements: 0700000009000000
+    position: 815,-132
+    exclusive: 0
+  - id: 11
+    title: New Quest
+    parent: 0
+    requirements: 09000000
+    position: 810,121
     exclusive: 0
