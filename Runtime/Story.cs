@@ -20,8 +20,9 @@ namespace Luno.Epyllion
 
         [SerializeField]
         internal QuestNodeData[] nodesData = new QuestNodeData[0];
-        
-        
+        [SerializeField]
+        private bool initializeEmpty;
+
 
         #region initialization
         //initialize the story in runtime
@@ -32,14 +33,12 @@ namespace Luno.Epyllion
             #endif
             
             //root quest
-            _quests.Add(0, new GroupQuest());
+            _quests.Add(0, new GroupQuest {_story = this, _state = QuestState.Blocked});
             
             //load all nodes
             foreach (var node in nodesData)
             {
-                var quest = new TaskQuest();
-                quest._id = node.id;
-                quest.exclusive = node.exclusive;
+                var quest = new TaskQuest {_story = this, _id = node.id, exclusive = node.exclusive, _state = QuestState.Blocked};
                 _quests.Add(node.id, quest);
             }
             
@@ -72,6 +71,7 @@ namespace Luno.Epyllion
                     ArrayUtility.Add(ref quest._requirements, requirement);
                 }
             }
+            if(initializeEmpty) SetState(CalculateInitialState());
         }
 
         private void SetClosestExclusiveParent(Quest[] quests, GroupQuest exclusiveParent)
@@ -187,6 +187,14 @@ namespace Luno.Epyllion
 
                     groupQuest._childrenLeft = childrenLeft;
                 }
+            }
+        }
+
+        internal void QuestStateChange(Quest quest, QuestState prevState)
+        {
+            foreach (var manager in _managers)
+            {
+                manager.OnQuestStateChange(quest, prevState);
             }
         }
     }

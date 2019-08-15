@@ -8,15 +8,13 @@ namespace Luno.Epyllion
     public abstract class Quest
     {
         internal int _id;
+        internal Story _story;
         internal GroupQuest _parent;
         internal Quest[] _requirements = new Quest[0];
 
         internal GroupQuest _closestExclusiveParent;
         internal Quest[] _dependents = new Quest[0];
         internal uint _requiredLeft;
-
-        public delegate void StateChangeDelegate(Quest quest, QuestState prevState);
-        public event StateChangeDelegate OnStateChanged;
         
         private bool _exclusive;
         public bool exclusive
@@ -37,7 +35,7 @@ namespace Luno.Epyllion
                 QuestState prevState = _state;
                 _state = value;
                 LockStateModification();
-                OnStateChanged?.Invoke(this,prevState);
+                _story.QuestStateChange(this,prevState);
                 UnlockStateModification();
             }
         }
@@ -189,12 +187,12 @@ namespace Luno.Epyllion
 
         private static bool _stateModificationBlock;
 
-        private static void LockStateModification()
+        internal static void LockStateModification()
         {
             _stateModificationBlock = true;
         }
 
-        private static void UnlockStateModification()
+        internal static void UnlockStateModification()
         {
             _stateModificationBlock = false;
         }

@@ -11,6 +11,16 @@ namespace Luno.Epyllion.Actions
         public QuestEvent onActivate;
         public QuestEvent onStart;
         public QuestEvent onComplete;
+        
+        public override void OnQuestStateChange(QuestState newState, QuestState oldState)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void OnSetup()
+        {
+            throw new NotImplementedException();
+        }
     }
     
     [Serializable]

@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace Luno.Epyllion
 {
-    [Serializable]
-    public class QuestAction : ScriptableObject
+    public abstract class QuestAction : ScriptableObject
     {
-
+        public abstract void OnQuestStateChange(QuestState newState, QuestState oldState);
+        public abstract void OnSetup();
     }
 }
