@@ -7,7 +7,7 @@ namespace Luno.Epyllion
 {
     public class GroupQuest : Quest
     {
-        internal Quest[] children = new Quest[0];
+        [SerializeField] internal Quest[] children = new Quest[0];
         internal uint _childrenLeft;
         
         protected internal override void Pause()

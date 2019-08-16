@@ -5,15 +5,19 @@ using UnityEngine;
 
 namespace Luno.Epyllion
 {
-    public abstract class Quest
+    public abstract class Quest : ScriptableObject
     {
+        //Editor graph data
+        [SerializeField] internal Vector2 graphPosition;
+        
+        
         internal int _id;
         internal Story _story;
-        internal GroupQuest _parent;
-        internal Quest[] _requirements = new Quest[0];
+        [SerializeField] internal GroupQuest _parent;
+        [SerializeField] internal Quest[] _requirements = new Quest[0];
 
         internal GroupQuest _closestExclusiveParent;
-        internal Quest[] _dependents = new Quest[0];
+        [SerializeField] internal Quest[] _dependents = new Quest[0];
         internal uint _requiredLeft;
         
         private bool _exclusive;

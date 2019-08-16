@@ -39,7 +39,7 @@ namespace Luno.Epyllion.Editor.UI
                 throw new Exception	("Couldn't find the Graph element");
             }
             
-            root.Q<UnityEngine.UIElements.Button>("createButton").RegisterCallback<MouseUpEvent>(evt => CreateStoryStructure());
+            root.Q<UnityEngine.UIElements.Button>("createButton").RegisterCallback<MouseUpEvent>(evt => CreateStory());
             
             OnSelectionChange();
         }
@@ -57,7 +57,8 @@ namespace Luno.Epyllion.Editor.UI
                     story = manager.story;
                     if (story != null)
                     {
-                        _graph.SetTargets(story,manager);
+                        _graph.story = story;
+                        //_graph.SetTargets(story,manager);
                         return;
                     }
                 }
@@ -67,14 +68,17 @@ namespace Luno.Epyllion.Editor.UI
                 story = Selection.activeObject as Story;
                 if (story != null)
                 {
-                    _graph.SetTargets(story, null);
+                    _graph.story = story;
+                    //_graph.SetTargets(story, null);
                     return;
                 }
             }
-            _graph.SetTargets(null,null);
+
+            _graph.story = null;
+            //_graph.SetTargets(null,null);
         }
 
-        private void CreateStoryStructure()
+        private void CreateStory()
         {
             string path = EditorUtility.SaveFilePanelInProject("Create New Story", "New Epyllion Story", "asset",
                 "Set a location to save the asset");

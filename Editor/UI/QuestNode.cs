@@ -11,7 +11,73 @@ namespace Luno.Epyllion.Editor.UI
 {
     public class QuestNode : Node
     {
-        private QuestNodeData _nodeData;
+
+        internal Quest _quest;
+        private TextField _titleField;
+        public readonly Port input;
+        public readonly Port output;
+        
+        internal QuestNode(Quest quest)
+        {
+            _quest = quest;
+            base.SetPosition(new Rect(quest.graphPosition,Vector2.zero));
+            base.title = quest.name;
+            //capabilities |= Capabilities.Resizable;
+            
+            //title editor
+            _titleField = new TextField();
+            _titleField.AddToClassList("titleField");
+            _titleField.value = base.title;
+            _titleField.RegisterCallback<InputEvent>(evt =>
+            {
+                quest.name = evt.newData;
+                title = quest.name;
+            });
+            _titleField.RegisterCallback<FocusOutEvent>(evt => StopEditingTitle());
+            titleContainer.Add(_titleField);
+
+            //Ports section
+            outputContainer.Add(output = Port.Create<Edge>(Orientation.Horizontal,Direction.Output,Port.Capacity.Multi,null));
+            output.AddManipulator(output.edgeConnector);
+            output.name = "output";
+            inputContainer.Add(input = Port.Create<Edge>(Orientation.Horizontal,Direction.Input,Port.Capacity.Multi,null));
+            input.AddManipulator(input.edgeConnector);
+            input.name = "input";
+        }
+        
+        internal void StartEditingTitle()
+        {
+            titleContainer.AddToClassList("editing");
+        }
+
+        internal void StopEditingTitle()
+        {
+            titleContainer.RemoveFromClassList("editing");
+        }
+        
+        public override void SetPosition(Rect newPos)
+        {
+            base.SetPosition(newPos);
+            _quest.graphPosition = newPos.position;
+            EditorUtility.SetDirty(_quest);
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        /*private QuestNodeData _nodeData;
         private TextField _titleField;
         private VisualElement _actionsContainer;
         private Graph _graph;
@@ -176,6 +242,6 @@ namespace Luno.Epyllion.Editor.UI
             evt.menu.AppendAction("Rename", (action) => StartEditingTitle());
             evt.menu.AppendSeparator();
             base.BuildContextualMenu(evt);
-        }
+        }*/
     }
 }

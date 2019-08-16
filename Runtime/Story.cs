@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -14,6 +15,50 @@ namespace Luno.Epyllion
 {
     public class Story : ScriptableObject, ISerializationCallbackReceiver
     {
+        [SerializeField] private GroupQuest rootQuest;
+
+        internal GroupQuest RootQuest
+        {
+            get
+            {
+                if (rootQuest == null)
+                    rootQuest = CreateQuest<GroupQuest>();
+                return rootQuest;
+            }
+        }
+
+        #region Editor
+        #if UNITY_EDITOR
+        internal T CreateQuest<T>() where T : Quest
+        {
+            var quest = CreateInstance<T>();
+            quest.hideFlags = HideFlags.HideInHierarchy;
+            AssetDatabase.AddObjectToAsset(quest,this);
+            return quest;
+        }
+
+        internal void DeleteQuest(Quest quest)
+        {
+            AssetDatabase.RemoveObjectFromAsset(quest);
+            Destroy(quest);
+        }
+        #endif
+        #endregion
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         private int _lastId;
         private List<StorySceneManager> _managers = new List<StorySceneManager>();
         internal Dictionary<int, Quest> _quests = new Dictionary<int, Quest>();
@@ -28,6 +73,7 @@ namespace Luno.Epyllion
         //initialize the story in runtime
         private void OnEnable()
         {
+            //_OnEnable();
             #if UNITY_EDITOR
             if (!EditorApplication.isPlayingOrWillChangePlaymode) return;
             #endif
