@@ -15,9 +15,9 @@ namespace Luno.Epyllion
         internal Story _story;
         [SerializeField] internal GroupQuest _parent;
         [SerializeField] internal Quest[] _requirements = new Quest[0];
-
-        internal GroupQuest _closestExclusiveParent;
         [SerializeField] internal Quest[] _dependents = new Quest[0];
+        [SerializeField] internal QuestAction[] actions = new QuestAction[0];
+        internal GroupQuest _closestExclusiveParent;
         internal uint _requiredLeft;
         
         private bool _exclusive;
@@ -27,7 +27,7 @@ namespace Luno.Epyllion
             set => _exclusive = value;
         }
 
-        internal QuestState _state;
+        internal QuestState _state = QuestState.Blocked;
         public QuestState state
         {
             get => _state;
@@ -38,10 +38,32 @@ namespace Luno.Epyllion
                 if (_state == value) return;
                 QuestState prevState = _state;
                 _state = value;
-                LockStateModification();
-                _story.QuestStateChange(this,prevState);
-                UnlockStateModification();
+                
+                OnStateChange(_state, prevState);
             }
+        }
+
+        private void OnStateChange(QuestState newState, QuestState prevState)
+        {
+            LockStateModification();
+            foreach (var action in actions)
+            {
+                action.OnQuestStateChange(newState,prevState);
+            }
+            UnlockStateModification();
+        }
+
+        internal void CompleteAction(QuestAction action)
+        {
+            if(_stateModificationBlock)
+                throw new Exception("You can't change the state of a Quest in an OnStateChanged event");
+            
+            foreach (var questAction in actions)
+            {
+                if (!questAction.completed)
+                    return;
+            }
+            Complete();
         }
 
         #region State Change

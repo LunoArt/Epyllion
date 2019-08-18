@@ -41,41 +41,21 @@ namespace Luno.Epyllion.Editor.UI
             
             root.Q<UnityEngine.UIElements.Button>("createButton").RegisterCallback<MouseUpEvent>(evt => CreateStory());
             
-            OnSelectionChange();
+            //OnSelectionChange();
+            OnGUI();
         }
 
-        private void OnSelectionChange()
+        /*private void OnSelectionChange()
         {
-            GameObject managerObject = Selection.activeGameObject;
-            Story story;
-            StorySceneManager manager;
-            if (managerObject != null)
-            {
-                manager = managerObject.GetComponent<StorySceneManager>();
-                if (manager != null)
-                {
-                    story = manager.story;
-                    if (story != null)
-                    {
-                        _graph.story = story;
-                        //_graph.SetTargets(story,manager);
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                story = Selection.activeObject as Story;
-                if (story != null)
-                {
-                    _graph.story = story;
-                    //_graph.SetTargets(story, null);
-                    return;
-                }
-            }
+            var story = Selection.activeObject as Story;
+            _graph.story = story;
+        }*/
 
-            _graph.story = null;
-            //_graph.SetTargets(null,null);
+        private void OnGUI()
+        {
+            var story = Selection.activeObject as Story;
+            if (story != _graph.story)
+                _graph.story = story;
         }
 
         private void CreateStory()

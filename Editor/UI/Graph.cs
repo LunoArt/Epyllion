@@ -114,7 +114,7 @@ namespace Luno.Epyllion.Editor.UI
                 {
                     ArrayUtility.Remove(ref node._quest._parent.children, node._quest);
 
-                    story.DeleteQuest(node._quest);
+                    Object.DestroyImmediate(node._quest,true);
                 }
             }
 

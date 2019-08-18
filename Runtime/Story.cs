@@ -13,10 +13,12 @@ using Object = UnityEngine.Object;
 
 namespace Luno.Epyllion
 {
-    public class Story : ScriptableObject, ISerializationCallbackReceiver
+    public class Story : ScriptableObject
     {
         [SerializeField] private GroupQuest rootQuest;
-
+        [SerializeField] private bool initializeEmpty;
+        [SerializeField] private int lastId;
+        
         internal GroupQuest RootQuest
         {
             get
@@ -33,43 +35,13 @@ namespace Luno.Epyllion
         {
             var quest = CreateInstance<T>();
             quest.hideFlags = HideFlags.HideInHierarchy;
+            quest._id = lastId++;
             AssetDatabase.AddObjectToAsset(quest,this);
             return quest;
-        }
-
-        internal void DeleteQuest(Quest quest)
-        {
-            AssetDatabase.RemoveObjectFromAsset(quest);
-            Destroy(quest);
         }
         #endif
         #endregion
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        private int _lastId;
-        private List<StorySceneManager> _managers = new List<StorySceneManager>();
-        internal Dictionary<int, Quest> _quests = new Dictionary<int, Quest>();
-
-        [SerializeField]
-        internal QuestNodeData[] nodesData = new QuestNodeData[0];
-        [SerializeField]
-        private bool initializeEmpty;
-
-
-        #region initialization
         //initialize the story in runtime
         private void OnEnable()
         {
@@ -77,170 +49,66 @@ namespace Luno.Epyllion
             #if UNITY_EDITOR
             if (!EditorApplication.isPlayingOrWillChangePlaymode) return;
             #endif
-            
-            //root quest
-            _quests.Add(0, new GroupQuest {_story = this, _state = QuestState.Blocked});
-            
-            //load all nodes
-            foreach (var node in nodesData)
-            {
-                var quest = new TaskQuest {_story = this, _id = node.id, exclusive = node.exclusive, _state = QuestState.Blocked};
-                _quests.Add(node.id, quest);
-            }
-            
-            //set dependencies
-            foreach (var node in nodesData)
-            {
-                var quest = _quests[node.id];
-                
-                //parent
-                quest._parent = _quests[node.parent] as GroupQuest;
-                if (quest._parent == null)
-                {
-                    throw new Exception("Parent node must be a GroupQuest");
-                }
-                ArrayUtility.Add(ref quest._parent.children, quest);
-                if (quest._parent.exclusive)
-                {
-                    SetClosestExclusiveParent(new []{quest},quest._parent);
-                }
-                else if(quest._parent._closestExclusiveParent != null)
-                {
-                    SetClosestExclusiveParent(new []{quest}, quest._parent._closestExclusiveParent);
-                }
-
-                //requirements
-                foreach (var requirementId in node.requirements)
-                {
-                    var requirement = _quests[requirementId];
-                    ArrayUtility.Add(ref requirement._dependents, quest);
-                    ArrayUtility.Add(ref quest._requirements, requirement);
-                }
-            }
             if(initializeEmpty) SetState(CalculateInitialState());
         }
-
-        private void SetClosestExclusiveParent(Quest[] quests, GroupQuest exclusiveParent)
-        {
-            foreach (var quest in quests)
-            {
-                quest._closestExclusiveParent = exclusiveParent;
-                if (!quest.exclusive && quest is GroupQuest groupQuest) SetClosestExclusiveParent(groupQuest.children, exclusiveParent);
-            }            
-        }
-        #endregion
-
-        private void OnDisable()
-        {
-            _managers.Clear();
-            _quests.Clear();
-        }
-
+        
         public StoryState CalculateInitialState()
         {
-            var ids = new int[_quests.Count];
-            var states = new QuestState[_quests.Count];
-            var count = -1;
-            ComputeInitialState(_quests[0],true, ref ids, ref states, ref count);
-
-            states[0] = QuestState.Available;
+            var stateDictionary = new Dictionary<int, QuestState>();
+            ForEach(rootQuest, (quest) =>
+            {
+                var open = (quest._parent == null || quest._parent._state != QuestState.Blocked) && quest._requirements.Length == 0;
+                stateDictionary.Add(quest._id, open?QuestState.Available : QuestState.Blocked);
+                
+            });
             
-            var state = new StoryState(){Ids = ids, States = states};
+            var state = new StoryState(){Ids = stateDictionary.Keys.ToArray(), States = stateDictionary.Values.ToArray()};
             return state;
-        }
-
-        private void ComputeInitialState(Quest quest, bool open , ref int[] ids, ref QuestState[] states, ref int count)
-        {
-            count++;
-            open &= quest._requirements.Length == 0;
-            ids[count] = quest._id;
-            states[count] = open ? QuestState.Available : QuestState.Blocked;
-
-            if(quest is GroupQuest groupQuest)
-            {
-                foreach (var child in groupQuest.children)
-                {
-                    ComputeInitialState(child, open, ref ids, ref states, ref count);
-                }
-            }
-        }
-        
-        public QuestNodeData CreateNode<T>() where T : Quest
-        {
-            QuestNodeData node = new QuestNodeData() {id = ++_lastId};
-            ArrayUtility.Add(ref nodesData, node);
-            return node;
-        }
-
-        public void RemoveNode(QuestNodeData node)
-        {
-            ArrayUtility.Remove(ref nodesData, node);
-        }
-
-        public void OnBeforeSerialize() {}
-
-        public void OnAfterDeserialize()
-        {
-            foreach (var quest in nodesData)
-            {
-                _lastId = Mathf.Max(_lastId, quest.id);
-            }
-        }
-
-        public void RegisterManager(StorySceneManager manager)
-        {
-            _managers.Add(manager);
-        }
-
-        public void UnregisterManager(StorySceneManager manager)
-        {
-            _managers.Remove(manager);
         }
 
         public void SetState(StoryState state)
         {
-            var indexes = new Dictionary<int,int>();
+            var stateDictionary = new Dictionary<int,QuestState>();
             
             for (var i = 0; i < state.Ids.Length; i++)
             {
-                var id = state.Ids[i];
-                indexes.Add(id, i);
+                stateDictionary.Add(state.Ids[i],state.States[i]);
             }
-
-            for (var i = 0; i < state.Ids.Length; i++)
+            
+            ForEach(rootQuest, (quest) =>
             {
-                var id = state.Ids[i];
-                _quests[id]._state = state.States[i];
+                quest._state = stateDictionary[quest._id];
+            });
+            
+            ForEach(rootQuest, (quest) =>
+            {
+                var requiredLeft = (uint) quest._requirements.Length;
+                foreach (var requirement in quest._requirements)
+                {
+                    if (requirement._state == QuestState.Completed)
+                        requiredLeft--;
+                }
+                quest._requiredLeft = requiredLeft;
+
+                if (!(quest is GroupQuest groupQuest)) return;
                 
-                //requirements left
-                uint requirementsLeft = 0;
-                foreach (var requirement in _quests[id]._requirements)
+                var childrenLeft = (uint) groupQuest.children.Length;
+                foreach (var child in groupQuest.children)
                 {
-                    if (state.States[indexes[requirement._id]] != QuestState.Completed)
-                        requirementsLeft++;
+                    if (child._state == QuestState.Completed)
+                        childrenLeft--;
                 }
-                _quests[id]._requiredLeft = requirementsLeft;
-
-                //children left
-                if (_quests[id] is GroupQuest groupQuest)
-                {
-                    uint childrenLeft = 0;
-                    foreach (var child in groupQuest.children)
-                    {
-                        if (state.States[indexes[child._id]] != QuestState.Completed)
-                            childrenLeft++;
-                    }
-
-                    groupQuest._childrenLeft = childrenLeft;
-                }
-            }
+                groupQuest._childrenLeft = childrenLeft;
+            });
         }
 
-        internal void QuestStateChange(Quest quest, QuestState prevState)
+        private static void ForEach(Quest quest, UnityAction<Quest> method)
         {
-            foreach (var manager in _managers)
+            method(quest);
+            if (!(quest is GroupQuest groupQuest)) return;
+            foreach (var child in groupQuest.children)
             {
-                manager.OnQuestStateChange(quest, prevState);
+                ForEach(child, method);
             }
         }
     }

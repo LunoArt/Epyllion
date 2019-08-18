@@ -6,6 +6,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace Luno.Epyllion.Editor.UI
 {
@@ -13,7 +14,7 @@ namespace Luno.Epyllion.Editor.UI
     {
 
         internal Quest _quest;
-        private TextField _titleField;
+        private readonly TextField _titleField;
         public readonly Port input;
         public readonly Port output;
         
@@ -35,6 +36,64 @@ namespace Luno.Epyllion.Editor.UI
             });
             _titleField.RegisterCallback<FocusOutEvent>(evt => StopEditingTitle());
             titleContainer.Add(_titleField);
+            
+            //play controls
+            extensionContainer.Add(new IMGUIContainer(() =>
+            {
+                if (!EditorApplication.isPlaying)
+                    return;
+                    
+                GUILayout.Label(quest.state.ToString());
+                GUILayout.Label("requirements left: "+quest._requiredLeft);
+                    
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Activate"))
+                {
+                    quest.Activate();
+                }
+
+                if (GUILayout.Button("Complete"))
+                {
+                    quest.Complete();
+                }
+                GUILayout.EndHorizontal();
+            }));
+            
+            //quest field
+            var serializedQuest = new SerializedObject(quest);
+            var actions = serializedQuest.FindProperty("actions");
+            var questContainer = new IMGUIContainer(() =>
+            {
+                serializedQuest.Update();
+                for (var a = 0; a < actions.arraySize; a++)
+                {
+                    var action = actions.GetArrayElementAtIndex(a);
+                    
+                    EditorGUILayout.Space();
+                    EditorGUILayout.BeginVertical(GUI.skin.box);
+
+                    var actionEditor = UnityEditor.Editor.CreateEditor(action.objectReferenceValue);
+                    actionEditor.OnInspectorGUI();
+
+                    EditorGUILayout.BeginHorizontal();
+                    
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("Remove Action"))
+                    {
+                        ArrayUtility.RemoveAt(ref quest.actions, a);
+                        Object.DestroyImmediate(action.objectReferenceValue, true);
+                        EditorUtility.SetDirty(quest);
+                        break;
+                    }
+
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
+                }
+                EditorGUILayout.Space();
+
+            });
+            extensionContainer.Add(questContainer);
+            
 
             //Ports section
             outputContainer.Add(output = Port.Create<Edge>(Orientation.Horizontal,Direction.Output,Port.Capacity.Multi,null));
@@ -43,6 +102,24 @@ namespace Luno.Epyllion.Editor.UI
             inputContainer.Add(input = Port.Create<Edge>(Orientation.Horizontal,Direction.Input,Port.Capacity.Multi,null));
             input.AddManipulator(input.edgeConnector);
             input.name = "input";
+            
+            //Actions Drag
+            RegisterCallback(new EventCallback<DragUpdatedEvent>((evt) =>
+            {
+                MonoScript draggedScript = DragAndDrop.objectReferences[0] as MonoScript;
+                if (draggedScript == null) return;
+                DragAndDrop.visualMode = draggedScript.GetClass().IsSubclassOf(typeof(QuestAction)) ? 
+                    DragAndDropVisualMode.Link : DragAndDropVisualMode.Rejected;
+            }));
+            RegisterCallback(new EventCallback<DragPerformEvent>((evt) =>
+            {
+                MonoScript draggedScript = DragAndDrop.objectReferences[0] as MonoScript;
+                if (draggedScript == null) return;
+                DragAndDrop.AcceptDrag();
+                AddNewAction(draggedScript.GetClass());
+            }));
+            
+            RefreshExpandedState();
         }
         
         internal void StartEditingTitle()
@@ -59,6 +136,18 @@ namespace Luno.Epyllion.Editor.UI
         {
             base.SetPosition(newPos);
             _quest.graphPosition = newPos.position;
+            EditorUtility.SetDirty(_quest);
+        }
+        
+        public void AddNewAction(System.Type actionType)
+        {            
+            //create action
+            var action = ScriptableObject.CreateInstance(actionType) as QuestAction;
+            if (action == null) return;
+            action.hideFlags = HideFlags.HideInHierarchy;
+            action._quest = _quest;
+            AssetDatabase.AddObjectToAsset(action,_quest);
+            ArrayUtility.Add(ref _quest.actions, action);
             EditorUtility.SetDirty(_quest);
         }
         
