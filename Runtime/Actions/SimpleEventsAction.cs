@@ -1,11 +1,12 @@
 using System;
 using Luno.Epyllion;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace Luno.Epyllion.Actions
 {
     [Serializable]
-    public class SimpleEventsAction : QuestAction
+    public class SimpleEventsAction : QuestSceneAction
     {
         public QuestEvent onSetup;
         public QuestEvent onActivate;
@@ -14,12 +15,12 @@ namespace Luno.Epyllion.Actions
         
         public override void OnQuestStateChange(QuestState newState, QuestState oldState)
         {
-            throw new NotImplementedException();
+            Debug.Log($"Scene Action: Quest '{_quest.name}' state change from {oldState} to {newState}");
         }
 
         public override void OnSetup()
         {
-            throw new NotImplementedException();
+            Debug.Log($"Scene Action: Quest '{_quest.name}' setup with state {_quest.state}");
         }
     }
     

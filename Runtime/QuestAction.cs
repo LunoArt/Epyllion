@@ -12,7 +12,7 @@ namespace Luno.Epyllion
         public abstract void OnQuestStateChange(QuestState newState, QuestState oldState);
         public abstract void OnSetup();
 
-        public void Complete()
+        internal virtual void Complete()
         {
             if (completed) return;
             completed = true;

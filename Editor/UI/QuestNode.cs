@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
@@ -80,6 +81,12 @@ namespace Luno.Epyllion.Editor.UI
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("Remove Action"))
                     {
+                        if (action.objectReferenceValue is QuestSceneActionWrapper wrapper)
+                        {
+                            EpyllionWindow.BeginSceneEdit(wrapper._sceneAsset);
+                            EpyllionWindow.GetSceneManager().WrapperDeleted(wrapper);
+                            EpyllionWindow.EndSceneEdit();
+                        }
                         ArrayUtility.RemoveAt(ref quest.actions, a);
                         Object.DestroyImmediate(action.objectReferenceValue, true);
                         EditorUtility.SetDirty(quest);
@@ -108,7 +115,12 @@ namespace Luno.Epyllion.Editor.UI
             {
                 MonoScript draggedScript = DragAndDrop.objectReferences[0] as MonoScript;
                 if (draggedScript == null) return;
-                DragAndDrop.visualMode = draggedScript.GetClass().IsSubclassOf(typeof(QuestAction)) ? 
+                DragAndDrop.visualMode = 
+                    draggedScript.GetClass().IsSubclassOf(typeof(QuestAction)) &&
+                    !draggedScript.GetClass().IsSubclassOf(typeof(QuestSceneActionWrapper)) &&
+                    draggedScript.GetClass() != typeof(QuestSceneActionWrapper) &&
+                    !draggedScript.GetClass().IsAbstract
+                        ? 
                     DragAndDropVisualMode.Link : DragAndDropVisualMode.Rejected;
             }));
             RegisterCallback(new EventCallback<DragPerformEvent>((evt) =>
@@ -140,13 +152,33 @@ namespace Luno.Epyllion.Editor.UI
         }
         
         public void AddNewAction(System.Type actionType)
-        {            
+        {
             //create action
             var action = ScriptableObject.CreateInstance(actionType) as QuestAction;
             if (action == null) return;
+
+            var sceneAction = action as QuestSceneAction;
+            if (sceneAction != null)
+            {
+                var actionWrapper = ScriptableObject.CreateInstance<QuestSceneActionWrapper>();
+                actionWrapper._action = sceneAction;
+                actionWrapper._sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(SceneManager.GetActiveScene().path);
+                if (actionWrapper._sceneAsset == null)
+                {
+                    EditorUtility.DisplayDialog("Can't add Action","You want to add a QuestSceneAction, the active scene must be saved first","Ok");
+                    return;
+                }
+                sceneAction._quest = _quest;
+                sceneAction._wrapper = actionWrapper;
+                var manager = EpyllionWindow.GetSceneManager();
+                manager._actions.Add(sceneAction);
+                EditorUtility.SetDirty(manager);
+                action = actionWrapper;
+            }
+            
             action.hideFlags = HideFlags.HideInHierarchy;
             action._quest = _quest;
-            AssetDatabase.AddObjectToAsset(action,_quest);
+            AssetDatabase.AddObjectToAsset(action, _quest);
             ArrayUtility.Add(ref _quest.actions, action);
             EditorUtility.SetDirty(_quest);
         }

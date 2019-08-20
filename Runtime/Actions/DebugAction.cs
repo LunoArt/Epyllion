@@ -11,7 +11,7 @@ namespace Luno.Epyllion.Actions
 
         public override void OnSetup()
         {
-            Debug.Log($"quest {_quest.name} setup");
+            Debug.Log($"Quest '{_quest.name}' setup with state {_quest.state}");
         }
     }
 }

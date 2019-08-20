@@ -29,29 +29,40 @@ namespace Luno.Epyllion
             }
         }
 
-        #region Editor
-        #if UNITY_EDITOR
+#region Editor
+#if UNITY_EDITOR
         internal T CreateQuest<T>() where T : Quest
         {
             var quest = CreateInstance<T>();
             quest.hideFlags = HideFlags.HideInHierarchy;
             quest._id = lastId++;
+            quest._story = this;
             AssetDatabase.AddObjectToAsset(quest,this);
             return quest;
         }
-        #endif
-        #endregion
+
+        Story()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeState;
+        }
+
+        private void OnPlayModeState(PlayModeStateChange state)
+        {
+            if(state == PlayModeStateChange.ExitingPlayMode)
+                ForEach(rootQuest, quest => { quest._state = QuestState.Blocked; });
+        }
+#endif
+#endregion
 
         //initialize the story in runtime
         private void OnEnable()
         {
-            //_OnEnable();
             #if UNITY_EDITOR
             if (!EditorApplication.isPlayingOrWillChangePlaymode) return;
             #endif
             if(initializeEmpty) SetState(CalculateInitialState());
         }
-        
+
         public StoryState CalculateInitialState()
         {
             var stateDictionary = new Dictionary<int, QuestState>();
@@ -99,6 +110,15 @@ namespace Luno.Epyllion
                         childrenLeft--;
                 }
                 groupQuest._childrenLeft = childrenLeft;
+            });
+            
+            //setup all the actions
+            ForEach(rootQuest, quest =>
+            {
+                foreach (var action in quest.actions)
+                {
+                    action.OnSetup();
+                }
             });
         }
 

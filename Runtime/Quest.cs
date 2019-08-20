@@ -5,14 +5,14 @@ using UnityEngine;
 
 namespace Luno.Epyllion
 {
-    public abstract class Quest : ScriptableObject
+    public class Quest : ScriptableObject
     {
         //Editor graph data
         [SerializeField] internal Vector2 graphPosition;
         
         
-        internal int _id;
-        internal Story _story;
+        [SerializeField] internal int _id;
+        [SerializeField] internal Story _story;
         [SerializeField] internal GroupQuest _parent;
         [SerializeField] internal Quest[] _requirements = new Quest[0];
         [SerializeField] internal Quest[] _dependents = new Quest[0];
@@ -20,7 +20,7 @@ namespace Luno.Epyllion
         internal GroupQuest _closestExclusiveParent;
         internal uint _requiredLeft;
         
-        private bool _exclusive;
+        [SerializeField] private bool _exclusive;
         public bool exclusive
         {
             get => _exclusive;
@@ -57,6 +57,8 @@ namespace Luno.Epyllion
         {
             if(_stateModificationBlock)
                 throw new Exception("You can't change the state of a Quest in an OnStateChanged event");
+
+            if (action is QuestSceneAction) return; // this actions notify via the wrapper
             
             foreach (var questAction in actions)
             {
