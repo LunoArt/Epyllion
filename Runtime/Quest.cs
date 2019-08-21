@@ -5,41 +5,67 @@ using UnityEngine;
 
 namespace Luno.Epyllion
 {
-    public abstract class Quest
+    public class Quest : ScriptableObject
     {
-        internal GroupQuest _parent;
-        internal Quest[] _requirements = new Quest[0];
-
-        internal GroupQuest _closestExclusiveParent;
-        internal Quest[] _dependents = new Quest[0];
-        private uint _requiredLeft;
-        private uint _childrenLeft;
-
-        public delegate void StateChangeDelegate(Quest quest, QuestState prevState);
-        public event StateChangeDelegate OnStateChanged;
+        //Editor graph data
+        [SerializeField] internal Vector2 graphPosition;
         
-        private bool _exclusive;
+        
+        [SerializeField] internal int _id;
+        [SerializeField] internal Story _story;
+        [SerializeField] internal GroupQuest _parent;
+        [SerializeField] internal Quest[] _requirements = new Quest[0];
+        [SerializeField] internal Quest[] _dependents = new Quest[0];
+        [SerializeField] internal QuestAction[] actions = new QuestAction[0];
+        internal GroupQuest _closestExclusiveParent;
+        internal uint _requiredLeft;
+        
+        [SerializeField] private bool _exclusive;
         public bool exclusive
         {
             get => _exclusive;
             set => _exclusive = value;
         }
 
-        private QuestState _state;
+        internal QuestState _state = QuestState.Available;
         public QuestState state
         {
             get => _state;
-            private set
+            protected set
             {
                 if(_stateModificationBlock)
                     throw new Exception("You can't change the state of a Quest in an OnStateChanged event");
                 if (_state == value) return;
                 QuestState prevState = _state;
                 _state = value;
-                LockStateModification();
-                OnStateChanged?.Invoke(this,prevState);
-                UnlockStateModification();
+                
+                OnStateChange(_state, prevState);
             }
+        }
+
+        private void OnStateChange(QuestState newState, QuestState prevState)
+        {
+            LockStateModification();
+            foreach (var action in actions)
+            {
+                action.OnQuestStateChange(newState,prevState);
+            }
+            UnlockStateModification();
+        }
+
+        internal void CompleteAction(QuestAction action)
+        {
+            if(_stateModificationBlock)
+                throw new Exception("You can't change the state of a Quest in an OnStateChanged event");
+
+            if (action is QuestSceneAction) return; // this actions notify via the wrapper
+            
+            foreach (var questAction in actions)
+            {
+                if (!questAction.completed)
+                    return;
+            }
+            Complete();
         }
 
         #region State Change
@@ -52,7 +78,7 @@ namespace Luno.Epyllion
                 return true;
             }
             
-            throw new Exception(String.Format("The quest state can't be set to %s. Current state: %s",newState,_state));
+            throw new Exception($"The quest state can't be set to {newState}. Current state: {_state}");
         }
         
         protected internal virtual void Pause()
@@ -71,6 +97,26 @@ namespace Luno.Epyllion
                 state = QuestState.Active;
             else if (_state == QuestState.Excluded)
                 state = QuestState.Available;
+        }
+
+        protected internal virtual void Unblock()
+        {
+            switch (_parent._state)
+            {
+                case QuestState.Active:
+                case QuestState.Available:
+                    state = QuestState.Available;
+                    break;
+                case QuestState.Excluded:
+                case QuestState.Paused:
+                    state = QuestState.Excluded;
+                    break;
+                case QuestState.Blocked:
+                case QuestState.Completed:
+                    throw new Exception($"Can't unblock the quest as the parent is {_parent._state}");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
         
         public void Activate()
@@ -118,8 +164,12 @@ namespace Luno.Epyllion
 
         public void Complete()
         {
-            if (_state == QuestState.Completed)
+            if(!ValidateStateChange(QuestState.Completed,QuestState.Active, QuestState.Available))
                 return;
+            /*if (_state == QuestState.Completed)
+                return;*/
+
+            state = QuestState.Completed;
 
             //re-include the paused and excluded quests
             if (_exclusive && _closestExclusiveParent != null)
@@ -134,7 +184,7 @@ namespace Luno.Epyllion
             GroupQuest parent = _parent;
             while (parent != null)
             {
-                //if all children completed, mark is as completed
+                //if all children completed, mark it as completed
                 if (--parent._childrenLeft <= 0)
                     parent.state = QuestState.Completed;
                 else
@@ -149,9 +199,11 @@ namespace Luno.Epyllion
             {
                 if (--dependent._requiredLeft <= 0)
                 {
-                    if (dependent._parent._state != QuestState.Available ||
+                    /*if (dependent._parent._state != QuestState.Available ||
                         dependent._parent._state == QuestState.Excluded)
-                        dependent.state = dependent._parent._state;
+                        dependent.state = dependent._parent._state;*/
+                    if (dependent._parent._state != QuestState.Blocked)
+                        dependent.Unblock();
                 }
             }
         }
@@ -163,12 +215,12 @@ namespace Luno.Epyllion
 
         private static bool _stateModificationBlock;
 
-        private static void LockStateModification()
+        internal static void LockStateModification()
         {
             _stateModificationBlock = true;
         }
 
-        private static void UnlockStateModification()
+        internal static void UnlockStateModification()
         {
             _stateModificationBlock = false;
         }

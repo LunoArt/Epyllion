@@ -12,10 +12,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 164b3c6415e154161bc3950f53fd85ed, type: 3}
   m_Name: Test Story
   m_EditorClassIdentifier: 
+  rootQuest: {fileID: 4095043859773464741}
   nodesData:
   - id: 6
     title: New Quest
     parent: 0
     requirements: 
-    position: 345,169
+    position: 179,-23
     exclusive: 0
+  - id: 7
+    title: New Quest
+    parent: 0
+    requirements: 06000000
+    position: 509,-132
+    exclusive: 0
+  - id: 9
+    title: New Quest
+    parent: 0
+    requirements: 06000000
+    position: 524,116
+    exclusive: 0
+  - id: 10
+    title: New Quest
+    parent: 0
+    requirements: 0700000009000000
+    position: 815,-132
+    exclusive: 0
+  - id: 11
+    title: New Quest
+    parent: 0
+    requirements: 09000000
+    position: 831,78
+    exclusive: 0
+  initializeEmpty: 0
+--- !u!114 &4095043859773464741
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cc62fd5a6c384e2a90a573663cce1fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

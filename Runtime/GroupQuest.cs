@@ -7,7 +7,8 @@ namespace Luno.Epyllion
 {
     public class GroupQuest : Quest
     {
-        internal Quest[] children = new Quest[0];
+        [SerializeField] internal Quest[] children = new Quest[0];
+        internal uint _childrenLeft;
         
         protected internal override void Pause()
         {
@@ -37,6 +38,15 @@ namespace Luno.Epyllion
             foreach (var child in children)
             {
                 child.Include();
+            }
+        }
+
+        protected internal override void Unblock()
+        {
+            base.Unblock();
+            foreach (var child in children)
+            {
+                child.Unblock();
             }
         }
     }

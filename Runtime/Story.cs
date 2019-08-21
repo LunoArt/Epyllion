@@ -1,160 +1,143 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace Luno.Epyllion
 {
-    public class Story : ScriptableObject, ISerializationCallbackReceiver
+    public class Story : ScriptableObject
     {
-        private int _lastId;
-        private List<StorySceneManager> _managers = new List<StorySceneManager>();
-        private Dictionary<int, Quest> _quests;
+        [SerializeField] private GroupQuest rootQuest;
+        [SerializeField] private bool initializeEmpty;
+        [SerializeField] private int lastId;
+        
+        public bool initialized { get; private set; }
+        
+        internal GroupQuest RootQuest
+        {
+            get
+            {
+                if (rootQuest == null)
+                    rootQuest = CreateQuest<GroupQuest>();
+                return rootQuest;
+            }
+        }
 
-        [SerializeField]
-        internal QuestNodeData[] nodesData = new QuestNodeData[0];
-        
-        
+#region Editor
+#if UNITY_EDITOR
+        internal T CreateQuest<T>() where T : Quest
+        {
+            var quest = CreateInstance<T>();
+            quest.hideFlags = HideFlags.HideInHierarchy;
+            quest._id = lastId++;
+            quest._story = this;
+            AssetDatabase.AddObjectToAsset(quest,this);
+            return quest;
+        }
+
+        Story()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeState;
+        }
+
+        private void OnPlayModeState(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.ExitingPlayMode)
+            {
+                ForEach(rootQuest, quest => { quest._state = QuestState.Available; });
+                initialized = false;
+            }
+        }
+#endif
+#endregion
 
         //initialize the story in runtime
         private void OnEnable()
         {
-            _quests = new Dictionary<int, Quest>();
-            
-            //root quest
-            _quests.Add(0, new GroupQuest());
-            
-            //load all nodes
-            foreach (var node in nodesData)
+            #if UNITY_EDITOR
+            if (!EditorApplication.isPlayingOrWillChangePlaymode) return;
+            #endif
+            if(initializeEmpty) SetState(CalculateInitialState());
+        }
+
+        public StoryState CalculateInitialState()
+        {
+            var stateDictionary = new Dictionary<int, QuestState>();
+            ForEach(rootQuest, (quest) =>
             {
-                var quest = new TaskQuest();
-                quest.exclusive = node.exclusive;
-                _quests.Add(node.id, quest);
+                var open = (quest._parent == null || quest._parent._state != QuestState.Blocked) && quest._requirements.Length == 0;
+                stateDictionary.Add(quest._id, open?QuestState.Available : QuestState.Blocked);
+            });
+            
+            
+            var state = new StoryState(){Ids = stateDictionary.Keys.ToArray(), States = stateDictionary.Values.ToArray()};
+            return state;
+        }
+
+        public void SetState(StoryState state)
+        {
+            var stateDictionary = new Dictionary<int,QuestState>();
+            
+            for (var i = 0; i < state.Ids.Length; i++)
+            {
+                stateDictionary.Add(state.Ids[i],state.States[i]);
             }
             
-            //set dependencies
-            foreach (var node in nodesData)
+            ForEach(rootQuest, (quest) =>
             {
-                var quest = _quests[node.id];
+                quest._state = stateDictionary[quest._id];
+            });
+            
+            ForEach(rootQuest, (quest) =>
+            {
+                var requiredLeft = (uint) quest._requirements.Length;
+                foreach (var requirement in quest._requirements)
+                {
+                    if (requirement._state == QuestState.Completed)
+                        requiredLeft--;
+                }
+                quest._requiredLeft = requiredLeft;
+
+                if (!(quest is GroupQuest groupQuest)) return;
                 
-                //parent
-                quest._parent = _quests[node.parent] as GroupQuest;
-                if (quest._parent == null)
+                var childrenLeft = (uint) groupQuest.children.Length;
+                foreach (var child in groupQuest.children)
                 {
-                    throw new Exception("Parent node must be a GroupQuest");
+                    if (child._state == QuestState.Completed)
+                        childrenLeft--;
                 }
-                ArrayUtility.Add(ref quest._parent.children, quest);
-                if (quest._parent.exclusive)
-                {
-                    SetClosestExclusiveParent(quest._parent.children,quest._parent);
-                }
-                else if(quest._parent._closestExclusiveParent != null)
-                {
-                    SetClosestExclusiveParent(new []{quest}, quest._parent._closestExclusiveParent);
-                }
-
-                //requirements
-                foreach (var requirementId in node.requirements)
-                {
-                    var requirement = _quests[requirementId];
-                    ArrayUtility.Add(ref requirement._dependents, quest);
-                    ArrayUtility.Add(ref quest._requirements, requirement);
-                }
-            }
-        }
-
-        private void SetClosestExclusiveParent(Quest[] quests, GroupQuest exclusiveParent)
-        {
-            foreach (var quest in quests)
+                groupQuest._childrenLeft = childrenLeft;
+            });
+            
+            //setup all the actions
+            ForEach(rootQuest, quest =>
             {
-                quest._closestExclusiveParent = exclusiveParent;
-                if (!quest.exclusive && quest is GroupQuest groupQuest) SetClosestExclusiveParent(groupQuest.children, exclusiveParent);
-            }            
+                foreach (var action in quest.actions)
+                {
+                    if(!(action is QuestSceneActionWrapper wrapper) || wrapper.initialized)
+                        action.OnSetup();
+                }
+            });
+
+            initialized = true;
         }
 
-        public QuestNodeData CreateNode<T>() where T : Quest
+        private static void ForEach(Quest quest, UnityAction<Quest> method)
         {
-            QuestNodeData node = new QuestNodeData() {id = ++_lastId};
-            ArrayUtility.Add(ref nodesData, node);
-            return node;
-        }
-
-        public void RemoveNode(QuestNodeData node)
-        {
-            ArrayUtility.Remove(ref nodesData, node);
-        }
-
-        public void OnBeforeSerialize() {}
-
-        public void OnAfterDeserialize()
-        {
-            foreach (var quest in nodesData)
+            method(quest);
+            if (!(quest is GroupQuest groupQuest)) return;
+            foreach (var child in groupQuest.children)
             {
-                _lastId = Mathf.Max(_lastId, quest.id);
+                ForEach(child, method);
             }
-        }
-
-        public void RegisterManager(StorySceneManager manager)
-        {
-            _managers.Add(manager);
-        }
-
-        public void UnregisterManager(StorySceneManager manager)
-        {
-            _managers.Remove(manager);
-        }
-
-        public void SetState(StoryState getInitialState)
-        {
-            throw new NotImplementedException();
-        }
-
-        public StoryState GetInitialState()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    [Serializable]
-    public class QuestNodeData
-    {
-        public int id;
-        public string title;
-        public int parent = 0;
-        public int[] requirements = new int[0];
-        public string position = "";
-        public bool exclusive = false;
-
-        public Rect GetPosition()
-        {
-            string[] coords = position.Split(',');
-            if (coords.Length != 2)
-            {
-                return Rect.zero;
-            }
-            return new Rect(new Vector2(int.Parse(coords[0]),int.Parse(coords[1])), Vector2.zero);
-        }
-
-        public void SetPosition(Rect position)
-        {
-            this.position = (int)position.x+","+(int)position.y;
-        }
-
-        public void AddRequirement(int id)
-        {
-            if (ArrayUtility.IndexOf(requirements, id) != -1)
-                return;
-            ArrayUtility.Add(ref requirements, id);
-        }
-
-        public void RemoveRequirement(int id)
-        {
-            ArrayUtility.Remove(ref requirements, id);
         }
     }
 }
