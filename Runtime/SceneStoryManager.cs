@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -10,10 +11,7 @@ namespace Luno.Epyllion
 
         private void Awake()
         {
-            foreach (var action in _actions)
-            {
-                action._wrapper._action = action;
-            }
+            BindActions();
         }
 
         private void OnEnable()
@@ -21,6 +19,14 @@ namespace Luno.Epyllion
             foreach (var action in _actions)
             {
                 action._wrapper.Initialize();
+            }
+        }
+
+        internal void BindActions()
+        {
+            foreach (var action in _actions)
+            {
+                action._wrapper._action = action;
             }
         }
 
@@ -37,7 +43,7 @@ namespace Luno.Epyllion
             EditorUtility.SetDirty(this);
         }
         
-        public void QuestDeleted(Quest quest)
+        internal void QuestDeleted(Quest quest)
         {
             for (var a = _actions.Count - 1; a >= 0; a--)
             {

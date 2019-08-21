@@ -19,6 +19,8 @@ namespace Luno.Epyllion
         [SerializeField] private bool initializeEmpty;
         [SerializeField] private int lastId;
         
+        public bool initialized { get; private set; }
+        
         internal GroupQuest RootQuest
         {
             get
@@ -48,8 +50,11 @@ namespace Luno.Epyllion
 
         private void OnPlayModeState(PlayModeStateChange state)
         {
-            if(state == PlayModeStateChange.ExitingPlayMode)
-                ForEach(rootQuest, quest => { quest._state = QuestState.Blocked; });
+            if (state == PlayModeStateChange.ExitingPlayMode)
+            {
+                ForEach(rootQuest, quest => { quest._state = QuestState.Available; });
+                initialized = false;
+            }
         }
 #endif
 #endregion
@@ -70,8 +75,8 @@ namespace Luno.Epyllion
             {
                 var open = (quest._parent == null || quest._parent._state != QuestState.Blocked) && quest._requirements.Length == 0;
                 stateDictionary.Add(quest._id, open?QuestState.Available : QuestState.Blocked);
-                
             });
+            
             
             var state = new StoryState(){Ids = stateDictionary.Keys.ToArray(), States = stateDictionary.Values.ToArray()};
             return state;
@@ -117,9 +122,12 @@ namespace Luno.Epyllion
             {
                 foreach (var action in quest.actions)
                 {
-                    action.OnSetup();
+                    if(!(action is QuestSceneActionWrapper wrapper) || wrapper.initialized)
+                        action.OnSetup();
                 }
             });
+
+            initialized = true;
         }
 
         private static void ForEach(Quest quest, UnityAction<Quest> method)

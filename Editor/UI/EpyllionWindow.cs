@@ -124,5 +124,20 @@ namespace Luno.Epyllion.Editor.UI
             //newManager.gameObject.hideFlags = HideFlags.HideInHierarchy;
             return newManager;
         }
+
+        [InitializeOnLoadMethod]
+        private static void Initialize()
+        {
+            EditorSceneManager.sceneOpened += SceneLoaded;
+        }
+
+        private static void SceneLoaded(Scene scene, OpenSceneMode openSceneMode)
+        {
+            var managers = FindObjectsOfType<SceneStoryManager>();
+            foreach (var manager in managers)
+            {
+                manager.BindActions();
+            }
+        }
     }
 }

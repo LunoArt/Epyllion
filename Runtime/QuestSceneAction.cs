@@ -12,5 +12,10 @@ namespace Luno.Epyllion
             base.Complete();
             _wrapper.Complete();
         }
+
+        private void OnDestroy()
+        {
+            _wrapper.initialized = false;
+        }
     }
 }

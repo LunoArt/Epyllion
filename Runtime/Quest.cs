@@ -27,7 +27,7 @@ namespace Luno.Epyllion
             set => _exclusive = value;
         }
 
-        internal QuestState _state = QuestState.Blocked;
+        internal QuestState _state = QuestState.Available;
         public QuestState state
         {
             get => _state;
