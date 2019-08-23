@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Luno.Epyllion.Actions;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
@@ -83,7 +84,7 @@ namespace Luno.Epyllion.Editor.UI
                     {
                         if (action.objectReferenceValue is QuestSceneActionWrapper wrapper)
                         {
-                            EpyllionWindow.BeginSceneEdit(wrapper._sceneAsset);
+                            EpyllionWindow.BeginSceneEdit(wrapper.sceneAsset);
                             EpyllionWindow.GetSceneManager().WrapperDeleted(wrapper);
                             EpyllionWindow.EndSceneEdit();
                         }
@@ -160,9 +161,12 @@ namespace Luno.Epyllion.Editor.UI
             var sceneAction = action as QuestSceneAction;
             if (sceneAction != null)
             {
-                var actionWrapper = ScriptableObject.CreateInstance<QuestSceneActionWrapper>();
+                var wrapperType = sceneAction.GetType().GetCustomAttribute<UseWrapperAttribute>()?.wrapperType;
+                if (wrapperType == null) wrapperType = typeof(QuestSceneActionWrapper);
+                var actionWrapper = (QuestSceneActionWrapper) ScriptableObject.CreateInstance(wrapperType);
                 actionWrapper._action = sceneAction;
                 actionWrapper._sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(SceneManager.GetActiveScene().path);
+                actionWrapper._actionType = MonoScript.FromScriptableObject(sceneAction);
                 if (actionWrapper._sceneAsset == null)
                 {
                     EditorUtility.DisplayDialog("Can't add Action","You want to add a QuestSceneAction, the active scene must be saved first","Ok");
@@ -183,6 +187,12 @@ namespace Luno.Epyllion.Editor.UI
             EditorUtility.SetDirty(_quest);
         }
         
+        public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
+        {
+            evt.menu.AppendAction("Rename", (action) => StartEditingTitle());
+            evt.menu.AppendSeparator();
+            base.BuildContextualMenu(evt);
+        }
         
         
         

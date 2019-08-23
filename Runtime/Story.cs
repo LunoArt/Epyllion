@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
@@ -52,7 +53,14 @@ namespace Luno.Epyllion
         {
             if (state == PlayModeStateChange.ExitingPlayMode)
             {
-                ForEach(rootQuest, quest => { quest._state = QuestState.Available; });
+                ForEach(rootQuest, quest =>
+                {
+                    foreach (var action in quest.actions)
+                    {
+                        action.completed = false;
+                    }
+                    quest._state = QuestState.Available;
+                });
                 initialized = false;
             }
         }
@@ -65,6 +73,13 @@ namespace Luno.Epyllion
             #if UNITY_EDITOR
             if (!EditorApplication.isPlayingOrWillChangePlaymode) return;
             #endif
+            SceneManager.sceneLoaded += SceneLoaded;
+
+        }
+
+        private void SceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded -= SceneLoaded;
             if(initializeEmpty) SetState(CalculateInitialState());
         }
 
@@ -122,8 +137,7 @@ namespace Luno.Epyllion
             {
                 foreach (var action in quest.actions)
                 {
-                    if(!(action is QuestSceneActionWrapper wrapper) || wrapper.initialized)
-                        action.OnSetup();
+                    action.OnSetup();
                 }
             });
 

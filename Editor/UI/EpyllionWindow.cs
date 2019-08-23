@@ -3,9 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 using UnityEngine.SceneManagement;
-using Button = UnityEngine.UI.Button;
 
 namespace Luno.Epyllion.Editor.UI
 {

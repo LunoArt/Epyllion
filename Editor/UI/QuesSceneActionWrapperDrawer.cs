@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,9 +14,9 @@ namespace Luno.Epyllion.Editor.UI
         {
             var wrapper = (QuestSceneActionWrapper)target;
             
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_sceneAsset"));
+            //EditorGUILayout.PropertyField(serializedObject.FindProperty("_sceneAsset"));
 
-            if (AssetDatabase.GetAssetPath(wrapper._sceneAsset) != SceneManager.GetActiveScene().path)
+            if (!EditorSceneManager.GetSceneByPath(AssetDatabase.GetAssetPath(wrapper._sceneAsset)).isLoaded)
             {
                 GUILayout.Label("Open scene to see the action");
                 return;

@@ -18,7 +18,8 @@ namespace Luno.Epyllion
         {
             foreach (var action in _actions)
             {
-                action._wrapper.Initialize();
+                if(action._quest._story.initialized)
+                    action._wrapper.OnSetup();
             }
         }
 
