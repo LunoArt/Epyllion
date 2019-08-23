@@ -161,9 +161,7 @@ namespace Luno.Epyllion.Editor.UI
             var sceneAction = action as QuestSceneAction;
             if (sceneAction != null)
             {
-                var wrapperType = sceneAction.GetType().GetCustomAttribute<UseWrapperAttribute>()?.wrapperType;
-                if (wrapperType == null) wrapperType = typeof(QuestSceneActionWrapper);
-                var actionWrapper = (QuestSceneActionWrapper) ScriptableObject.CreateInstance(wrapperType);
+                var actionWrapper = (QuestSceneActionWrapper) ScriptableObject.CreateInstance(typeof(QuestSceneActionWrapper));
                 actionWrapper._action = sceneAction;
                 actionWrapper._sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(SceneManager.GetActiveScene().path);
                 actionWrapper._actionType = MonoScript.FromScriptableObject(sceneAction);
