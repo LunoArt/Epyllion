@@ -5,12 +5,13 @@ namespace Luno.Epyllion
 {
     public abstract class QuestSceneAction : QuestAction
     {
-        [SerializeField] internal QuestSceneActionWrapper _wrapper;
+        [SerializeField] [HideInInspector] internal QuestSceneActionWrapper _wrapper;
+        public QuestSceneActionWrapper wrapper => _wrapper;
 
         public override void Complete()
         {
             base.Complete();
-            _wrapper.Complete();
+            wrapper.Complete();
         }
     }
 }

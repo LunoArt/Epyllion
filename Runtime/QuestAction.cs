@@ -8,7 +8,9 @@ namespace Luno.Epyllion
         public bool completed { get; internal set; }
 
         [SerializeField] [HideInInspector] internal Quest _quest;
-        
+
+        public Quest quest => _quest;
+
         public abstract void OnQuestStateChange(QuestState newState, QuestState oldState);
         public abstract void OnSetup();
 

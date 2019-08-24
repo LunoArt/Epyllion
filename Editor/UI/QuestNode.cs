@@ -15,8 +15,12 @@ namespace Luno.Epyllion.Editor.UI
     public class QuestNode : Node
     {
 
-        internal Quest _quest;
         private readonly TextField _titleField;
+        private UnityEditor.Editor[] _actionEditors;
+        private bool[] _actionHides;
+        
+        internal Quest _quest;
+        
         public readonly Port input;
         public readonly Port output;
         
@@ -67,29 +71,55 @@ namespace Luno.Epyllion.Editor.UI
             var questContainer = new IMGUIContainer(() =>
             {
                 serializedQuest.Update();
+
+                EditorGUIUtility.labelWidth = 100;
+                EditorGUIUtility.fieldWidth = 100;
+                
+                //check if the editors has the same size as the actions
+                if (_actionEditors == null)
+                {
+                    _actionEditors = new UnityEditor.Editor[actions.arraySize];
+                    _actionHides = new bool[actions.arraySize];
+                }else if (_actionEditors.Length != actions.arraySize)
+                {
+                    Array.Resize(ref _actionEditors, actions.arraySize);
+                    Array.Resize(ref _actionHides, actions.arraySize);
+                }
+                
                 for (var a = 0; a < actions.arraySize; a++)
                 {
-                    var action = actions.GetArrayElementAtIndex(a);
+                    var action = (QuestAction) actions.GetArrayElementAtIndex(a).objectReferenceValue;
+                    var wrapper = action as QuestSceneActionWrapper;
                     
                     EditorGUILayout.Space();
-                    EditorGUILayout.BeginVertical(GUI.skin.box);
+                    
+                    //Action Editor...
+                    if (_actionEditors[a] == null || _actionEditors[a].target != action)
+                    {
+                        _actionEditors[a] = UnityEditor.Editor.CreateEditor(action);
+                    }
 
-                    var actionEditor = UnityEditor.Editor.CreateEditor(action.objectReferenceValue);
-                    actionEditor.OnInspectorGUI();
+                    _actionHides[a] = !EditorGUILayout.Foldout(!_actionHides[a], (wrapper != null)? wrapper._actionType.name : action.GetType().Name);
+
+                    if (_actionHides[a]) break;
+                    
+                    EditorGUILayout.BeginVertical();
+
+                    _actionEditors[a].OnInspectorGUI();
 
                     EditorGUILayout.BeginHorizontal();
                     
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("Remove Action"))
                     {
-                        if (action.objectReferenceValue is QuestSceneActionWrapper wrapper)
+                        if (wrapper != null)
                         {
                             EpyllionWindow.BeginSceneEdit(wrapper.sceneAsset);
                             EpyllionWindow.GetSceneManager().WrapperDeleted(wrapper);
                             EpyllionWindow.EndSceneEdit();
                         }
                         ArrayUtility.RemoveAt(ref quest.actions, a);
-                        Object.DestroyImmediate(action.objectReferenceValue, true);
+                        Object.DestroyImmediate(action, true);
                         EditorUtility.SetDirty(quest);
                         break;
                     }

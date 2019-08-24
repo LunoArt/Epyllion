@@ -21,6 +21,10 @@
     display: flex;
 }
 
+.node {
+    min-width: 220px;
+}
+
 .node #title .titleField, .node #title.editing #title-label, .node #title.editing #title-button-container  {
     display: none;
 }

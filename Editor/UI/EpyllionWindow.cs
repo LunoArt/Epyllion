@@ -55,7 +55,7 @@ namespace Luno.Epyllion.Editor.UI
         private void OnGUI()
         {
             var story = Selection.activeObject as Story;
-            if (story != _graph.story)
+            if (story != _graph.story || story == null)
                 _graph.story = story;
         }
 

@@ -74,7 +74,6 @@ namespace Luno.Epyllion
             if (!EditorApplication.isPlayingOrWillChangePlaymode) return;
             #endif
             SceneManager.sceneLoaded += SceneLoaded;
-
         }
 
         private void SceneLoaded(Scene scene, LoadSceneMode mode)

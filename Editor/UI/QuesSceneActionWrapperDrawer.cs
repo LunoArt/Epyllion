@@ -12,9 +12,9 @@ namespace Luno.Epyllion.Editor.UI
 
         public override void OnInspectorGUI()
         {
-            var wrapper = (QuestSceneActionWrapper)target;
+            var wrapper = (QuestSceneActionWrapper) target;
             
-            //EditorGUILayout.PropertyField(serializedObject.FindProperty("_sceneAsset"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_sceneAsset"));
 
             if (!EditorSceneManager.GetSceneByPath(AssetDatabase.GetAssetPath(wrapper._sceneAsset)).isLoaded)
             {

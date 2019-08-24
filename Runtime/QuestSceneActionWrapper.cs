@@ -9,13 +9,13 @@ using Object = UnityEngine.Object;
 
 namespace Luno.Epyllion
 {
-    internal class QuestSceneActionWrapper : QuestAction
+    public class QuestSceneActionWrapper : QuestAction
 #if UNITY_EDITOR
         , ISerializationCallbackReceiver
 #endif
     {
         internal QuestSceneAction _action;
-        [SerializeField] internal string _scenePath;
+        [SerializeField] public string scenePath { get; internal set; }
         [SerializeField] internal string _actionTypeName;
         [SerializeField] internal Object _sceneAsset;
         [SerializeField] internal Object _actionType;
@@ -30,8 +30,8 @@ namespace Luno.Epyllion
             {
                 var type = Type.GetType(_actionTypeName);
                 var method = type.GetMethod("OnQuestStateChangeOutOfScene",
-                    BindingFlags.Static | BindingFlags.Public, null, new [] {typeof(string), typeof(QuestState), typeof(QuestState) }, null);
-                method?.Invoke(null, new object[] {_scenePath, newState, oldState});
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy, null, new [] {typeof(QuestSceneActionWrapper), typeof(QuestState), typeof(QuestState) }, null);
+                method?.Invoke(null, new object[] {this, newState, oldState});
             }
         }
 
@@ -44,8 +44,8 @@ namespace Luno.Epyllion
             else
             {
                 var method = Type.GetType(_actionTypeName).GetMethod("OnSetupOutOfScene",
-                    BindingFlags.Static | BindingFlags.Public, null, new [] {typeof(string)}, null);
-                method?.Invoke(null, new object[] {_scenePath});
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy, null, new [] {typeof(QuestSceneActionWrapper)}, null);
+                method?.Invoke(null, new object[] {this});
             }
         }
 
@@ -60,7 +60,7 @@ namespace Luno.Epyllion
 
         public void OnBeforeSerialize()
         {
-            _scenePath = AssetDatabase.GetAssetPath(_sceneAsset);
+            scenePath = AssetDatabase.GetAssetPath(_sceneAsset);
             _actionTypeName = actionType.GetClass().AssemblyQualifiedName;
         }
 
