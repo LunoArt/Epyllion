@@ -18,7 +18,8 @@ namespace Luno.Epyllion
         {
             foreach (var action in _actions)
             {
-                action._wrapper.Initialize();
+                if(action._quest._story.initialized)
+                    action.wrapper.OnSetup();
             }
         }
 
@@ -26,7 +27,7 @@ namespace Luno.Epyllion
         {
             foreach (var action in _actions)
             {
-                action._wrapper._action = action;
+                action.wrapper._action = action;
             }
         }
 
@@ -36,7 +37,7 @@ namespace Luno.Epyllion
             for (var a = _actions.Count - 1; a >= 0; a--)
             {
                 var action = _actions[a];
-                if (action._wrapper == wrapper)
+                if (action.wrapper == wrapper)
                     _actions.RemoveAt(a);
             }
 

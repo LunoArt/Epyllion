@@ -116,7 +116,7 @@ namespace Luno.Epyllion.Editor.UI
                     foreach (var action in node._quest.actions)
                     {
                         if (action is QuestSceneActionWrapper wrapper)
-                            scenesToRemoveFrom.Add(wrapper._sceneAsset);
+                            scenesToRemoveFrom.Add(wrapper.sceneAsset);
                     }
                     foreach (var scene in scenesToRemoveFrom)
                     {
