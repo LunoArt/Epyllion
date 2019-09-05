@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -17,7 +18,7 @@ namespace Luno.Epyllion
     public class Story : ScriptableObject
     {
         [SerializeField] private GroupQuest rootQuest;
-        [SerializeField] private bool initializeEmpty;
+        //[SerializeField] private bool initializeEmpty;
         [SerializeField] private int lastId;
         
         public bool initialized { get; private set; }
@@ -67,7 +68,7 @@ namespace Luno.Epyllion
 #endif
 #endregion
 
-        //initialize the story in runtime
+        /*//initialize the story in runtime
         private void OnEnable()
         {
             #if UNITY_EDITOR
@@ -80,7 +81,7 @@ namespace Luno.Epyllion
         {
             SceneManager.sceneLoaded -= SceneLoaded;
             if(initializeEmpty) SetState(CalculateInitialState());
-        }
+        }*/
 
         public StoryState CalculateInitialState()
         {
