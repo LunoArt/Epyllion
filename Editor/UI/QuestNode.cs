@@ -101,31 +101,32 @@ namespace Luno.Epyllion.Editor.UI
 
                     _actionHides[a] = !EditorGUILayout.Foldout(!_actionHides[a], (wrapper != null)? wrapper._actionType.name : action.GetType().Name);
 
-                    if (_actionHides[a]) break;
-                    
-                    EditorGUILayout.BeginVertical();
-
-                    _actionEditors[a].OnInspectorGUI();
-
-                    EditorGUILayout.BeginHorizontal();
-                    
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button("Remove Action"))
+                    if (!_actionHides[a])
                     {
-                        if (wrapper != null)
-                        {
-                            EpyllionWindow.BeginSceneEdit(wrapper.sceneAsset);
-                            EpyllionWindow.GetSceneManager().WrapperDeleted(wrapper);
-                            EpyllionWindow.EndSceneEdit();
-                        }
-                        ArrayUtility.RemoveAt(ref quest.actions, a);
-                        Object.DestroyImmediate(action, true);
-                        EditorUtility.SetDirty(quest);
-                        break;
-                    }
+                        EditorGUILayout.BeginVertical();
 
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUILayout.EndVertical();
+                        _actionEditors[a].OnInspectorGUI();
+
+                        EditorGUILayout.BeginHorizontal();
+
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button("Remove Action"))
+                        {
+                            if (wrapper != null)
+                            {
+                                EpyllionWindow.BeginSceneEdit(wrapper.sceneAsset);
+                                EpyllionWindow.GetSceneManager().WrapperDeleted(wrapper);
+                                EpyllionWindow.EndSceneEdit();
+                            }
+                            ArrayUtility.RemoveAt(ref quest.actions, a);
+                            Object.DestroyImmediate(action, true);
+                            EditorUtility.SetDirty(quest);
+                            break;
+                        }
+
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.EndVertical();
+                    }
                 }
                 EditorGUILayout.Space();
 
