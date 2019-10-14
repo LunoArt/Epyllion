@@ -9,25 +9,25 @@ namespace Luno.Epyllion
     {
         //Editor graph data
         [SerializeField] internal Vector2 graphPosition;
-        
-        
+
         [SerializeField] internal int _id;
         [SerializeField] internal Story _story;
         [SerializeField] internal GroupQuest _parent;
         [SerializeField] internal Quest[] _requirements = new Quest[0];
         [SerializeField] internal Quest[] _dependents = new Quest[0];
         [SerializeField] internal QuestAction[] actions = new QuestAction[0];
+        [SerializeField] private bool _exclusive;
+        
         internal GroupQuest _closestExclusiveParent;
+        internal QuestState _state = QuestState.Available;
         internal uint _requiredLeft;
         
-        [SerializeField] private bool _exclusive;
+        public int id => _id;
         public bool exclusive
         {
             get => _exclusive;
             set => _exclusive = value;
         }
-
-        internal QuestState _state = QuestState.Available;
         public QuestState state
         {
             get => _state;
