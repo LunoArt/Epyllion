@@ -50,6 +50,7 @@ namespace Luno.Epyllion
             {
                 action.OnQuestStateChange(newState,prevState);
             }
+            _story.QuestStateChanged(this, prevState);
             UnlockStateModification();
         }
 

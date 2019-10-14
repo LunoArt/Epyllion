@@ -20,6 +20,8 @@ namespace Luno.Epyllion
         [SerializeField] private GroupQuest rootQuest;
         //[SerializeField] private bool initializeEmpty;
         [SerializeField] private int lastId;
+
+        public event UnityAction<Quest, QuestState> OnQuestStateChange;
         
         public bool initialized { get; private set; }
         
@@ -31,6 +33,11 @@ namespace Luno.Epyllion
                     rootQuest = CreateQuest<GroupQuest>();
                 return rootQuest;
             }
+        }
+
+        internal void QuestStateChanged(Quest quest, QuestState previousState)
+        {
+            OnQuestStateChange?.Invoke(quest,previousState);
         }
 
 #region Editor
