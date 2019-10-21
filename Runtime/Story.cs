@@ -1,17 +1,10 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Text.RegularExpressions;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.Events;
-using UnityEngine.Rendering;
-using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
-using Object = UnityEngine.Object;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Luno.Epyllion
 {
@@ -29,8 +22,10 @@ namespace Luno.Epyllion
         {
             get
             {
+#if UNITY_EDITOR
                 if (rootQuest == null)
                     rootQuest = CreateQuest<GroupQuest>();
+#endif
                 return rootQuest;
             }
         }
