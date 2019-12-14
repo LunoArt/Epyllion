@@ -126,10 +126,13 @@ namespace Luno.Epyllion.Editor.UI
         [InitializeOnLoadMethod]
         private static void Initialize()
         {
-            EditorSceneManager.sceneOpened += SceneLoaded;
+            EditorSceneManager.sceneOpened += (Scene scene, OpenSceneMode mode) => SceneLoaded();
+            
+            // on Editor opened, bind in the next frame so the objects are loaded
+            EditorApplication.delayCall += SceneLoaded;
         }
-
-        private static void SceneLoaded(Scene scene, OpenSceneMode openSceneMode)
+        
+        private static void SceneLoaded()
         {
             var managers = FindObjectsOfType<SceneStoryManager>();
             foreach (var manager in managers)
