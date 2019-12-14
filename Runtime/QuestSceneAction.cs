@@ -8,10 +8,10 @@ namespace Luno.Epyllion
         [SerializeField] [HideInInspector] internal QuestSceneActionWrapper _wrapper;
         public QuestSceneActionWrapper wrapper => _wrapper;
 
-        public override void Complete()
+        public override void Complete(string result = null)
         {
-            base.Complete();
-            wrapper.Complete();
+            base.Complete(result);
+            wrapper.Complete(result);
         }
     }
 }

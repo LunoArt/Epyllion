@@ -21,8 +21,10 @@ namespace Luno.Epyllion
         internal GroupQuest _closestExclusiveParent;
         internal QuestState _state = QuestState.Available;
         internal uint _requiredLeft;
+        internal string _result;
         
         public int id => _id;
+        public string result => _result ?? "";
         public bool exclusive
         {
             get => _exclusive;
