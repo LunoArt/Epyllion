@@ -1,5 +1,6 @@
 using System;
 using UnityEditor;
+using UnityEditor.Graphs;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -7,8 +8,14 @@ using UnityEngine.SceneManagement;
 
 namespace Luno.Epyllion.Editor.UI
 {
-    public class EpyllionWindow : EditorWindow
+    public class EpyllionWindow : EditorWindow, IHasCustomMenu
     {
+        class Styles
+        {
+            public GUIStyle lockButton = "IN LockButton";
+        }
+        private static Styles s_Styles;
+        
         [MenuItem("Window/Luno/Epyllion")]
         public static void ShowWindow()
         {
@@ -16,6 +23,7 @@ namespace Luno.Epyllion.Editor.UI
         }
 
         private Graph _graph;
+        private bool _locked;
 
         private void OnEnable()
         {
@@ -54,7 +62,10 @@ namespace Luno.Epyllion.Editor.UI
 
         private void OnGUI()
         {
-            var story = Selection.activeObject as Story;
+            if (_locked && _graph.story == null)
+                _locked = false;
+            
+            var story = _locked ? _graph.story : Selection.activeObject as Story;
             if (story != _graph.story || story == null)
                 _graph.story = story;
         }
@@ -138,6 +149,26 @@ namespace Luno.Epyllion.Editor.UI
             foreach (var manager in managers)
             {
                 manager.BindActions();
+            }
+        }
+
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            menu.AddItem(EditorGUIUtility.TrTextContent("Lock"), _locked, () => { _locked = !_locked;});
+        }
+
+        protected virtual void ShowButton(Rect rect)
+        {
+            if(s_Styles == null)
+                s_Styles = new Styles();
+
+            EditorGUI.BeginChangeCheck();
+            _locked = GUI.Toggle(rect, _locked, GUIContent.none, s_Styles.lockButton);
+
+            if (!EditorGUI.EndChangeCheck()) return;
+            if (!_locked)
+            {
+                OnGUI();
             }
         }
     }
