@@ -15,10 +15,11 @@ namespace Luno.Epyllion
 #endif
     {
         internal QuestSceneAction _action;
-        [SerializeField] public string scenePath { get; internal set; }
+        public string scenePath => _scenePath;
         [SerializeField] internal string _actionTypeName;
         [SerializeField] internal Object _sceneAsset;
         [SerializeField] internal Object _actionType;
+        [SerializeField] internal string _scenePath;
 
         
         
@@ -60,7 +61,7 @@ namespace Luno.Epyllion
 
         public void OnBeforeSerialize()
         {
-            scenePath = AssetDatabase.GetAssetPath(_sceneAsset);
+            _scenePath = AssetDatabase.GetAssetPath(_sceneAsset);
             _actionTypeName = actionType.GetClass().AssemblyQualifiedName;
         }
 
